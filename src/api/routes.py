@@ -19,9 +19,22 @@ def handle_hello():
     response_body = {}
     response_body['message'] = "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"
     return response_body, 200
+ 
 
-# current_user = {'user_id'}    
-
+@api.route("/login", methods=["POST"])
+def login():
+    response_body = {}
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+    user = db.session.execute(db.select(Users).where(Users.email == email, Users.password == password, Users.is_active)).scalar()
+    if not user:
+        response_body['message'] = "Bad email or password"
+        return response_body, 401
+    access_token = create_access_token(identity={"email": user.email, 'user_id': user.id, "is_admin": user.is_admin})
+    response_body['message'] = f'Usuario {email} logeado con exito'
+    response_body['access_token'] = access_token
+    response_body['results'] = user.serialize()
+    return response_body, 200
 
 @api.route('/training-plans', methods=['GET', 'POST'])
 @jwt_required()
@@ -93,3 +106,27 @@ def training_plan(id):
         response_body['results'] = {}
         return response_body, 200
         
+@api.route('/training-sessions', methods=['GET', 'POST'])
+@jwt_required()
+def training_sessions():
+    response_body = {}
+    current_user = get_jwt_identity()
+    if request.method == 'GET':
+        rows = db.session.execute(db.select(TrainingSessions)).where(TrainingSessions.user_id == current_user['user_id']).scalars()
+        result = [row.serialize() for row in rows]    
+        response_body['message'] = 'Listado de Sessiones de Entrenamiento'
+        response_body['results'] = result
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json
+        row = TrainingSessions(date=data.get('date'),
+                               duration_minutes=data.get('duration_minutes'),
+                               training_plan_id=data.get('training_plan_id'))
+    db.session.add(row)
+    db.session.commit()
+    # TODO: tengo que crear todos los ejercicios que tiene el plan
+    response_body['message'] = 'Mensaje desde el POST'
+    response_body['results'] = row.serialize()
+    return response_body, 200
+
+    
