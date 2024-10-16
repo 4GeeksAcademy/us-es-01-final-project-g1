@@ -42,7 +42,7 @@ def training_plans():
     response_body = {}
     current_user = get_jwt_identity()
     if request.method == 'GET':
-        rows = db.session.execute(db.select(TrainingPlans)).where(TrainingPlans.user_id == current_user['user_id']).scalars()
+        rows = db.session.execute(db.select(TrainingPlans).where(TrainingPlans.user_id == current_user['user_id'])).scalars()
         result = [row.serialize() for row in rows]    
         response_body['message'] = 'Listado de Planes de Entrenamiento'
         response_body['results'] = result
@@ -60,73 +60,136 @@ def training_plans():
                             user_id=current_user['user_id'])
         db.session.add(row)
         db.session.commit()
-        # TODO: tengo que crear todos los ejercicios que tiene el plan
-        response_body['message'] = 'Mensaje desde el POST'
+        response_body['message'] = 'Plan de entrenamiento creado exitosamente'
         response_body['results'] = row.serialize()
         return response_body, 200
-
 
 @api.route('/training-plans/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @jwt_required()
 def training_plan(id):
     response_body = {}
     current_user = get_jwt_identity()
-    row = db.session.execute(db.select(Authors).where(Authors.id == id)).scalar()
+    row = db.session.execute(db.select(TrainingPlans).where(TrainingPlans.id == id)).scalar()
     if not row:
-        response_body['message'] = f'El autor {id} no existe'
+        response_body['message'] = f'El plan de entrenamiento {id} no existe'
         response_body['results'] = {}
         return response_body, 404
-    if row.user_id != current_user['id']:
-        print(row.serialize())
-        response_body['message'] = f'Usted no puede modicar, ver o borrar los datos del author {id}'
+    if row.user_id != current_user['user_id']:
+        response_body['message'] = f'Usted no puede modificar, ver o borrar los datos del plan {id}'
         response_body['results'] = {}
-        return response_body, 200
+        return response_body, 403
     if request.method == 'GET':
-        response_body['message'] = f'Mensaje desde el GET de {id}'
+        response_body['message'] = f'Detalle del plan de entrenamiento {id}'
         response_body['results'] = row.serialize()
         return response_body, 200
     if request.method == 'PUT':
         data = request.json
         row.name = data.get('name')
-        row.duration_minutes=data.get('duration_minutes'),
-        row.burn_calories=data.get('burn_calories'),
-        row.level=data.get('level'),
-        row.registration_date=data.get('registration_date'),
-        row.finalization_date=data.get('finalization_date'),
-        row.quantity_session=data.get('quantity_session'),
-        row.is_active=data.get('is_active')
+        row.duration_minutes = data.get('duration_minutes')
+        row.burn_calories = data.get('burn_calories')
+        row.level = data.get('level')
+        row.registration_date = data.get('registration_date')
+        row.finalization_date = data.get('finalization_date')
+        row.quantity_session = data.get('quantity_session')
+        row.is_active = data.get('is_active')
         db.session.commit()
-        response_body['message'] = f'Mensaje desde el PUT de {id}'
+        response_body['message'] = f'Plan de entrenamiento {id} actualizado correctamente'
         response_body['results'] = row.serialize()
         return response_body, 200
     if request.method == 'DELETE':
-        row.is_active=False
+        row.is_active = False
         db.session.commit()
-        response_body['message'] = f'Mensaje desde el DELETE de {id}'
+        response_body['message'] = f'Plan de entrenamiento {id} eliminado correctamente'
         response_body['results'] = {}
         return response_body, 200
-        
-@api.route('/training-sessions', methods=['GET', 'POST'])
+
+@api.route('/sessions', methods=['GET', 'POST'])
 @jwt_required()
-def training_sessions():
+def sessions():
     response_body = {}
     current_user = get_jwt_identity()
     if request.method == 'GET':
-        rows = db.session.execute(db.select(TrainingSessions)).where(TrainingSessions.user_id == current_user['user_id']).scalars()
+        rows = db.session.execute(db.select(Sessions)).where(Sessions.training_plan_to.user_id == current_user['user_id']).scalars()
         result = [row.serialize() for row in rows]    
-        response_body['message'] = 'Listado de Sessiones de Entrenamiento'
+        response_body['message'] = 'Listado de Sesiones'
         response_body['results'] = result
         return response_body, 200
     if request.method == 'POST':
         data = request.json
-        row = TrainingSessions(date=data.get('date'),
-                               duration_minutes=data.get('duration_minutes'),
-                               training_plan_id=data.get('training_plan_id'))
-    db.session.add(row)
-    db.session.commit()
-    # TODO: tengo que crear todos los ejercicios que tiene el plan
-    response_body['message'] = 'Mensaje desde el POST'
-    response_body['results'] = row.serialize()
-    return response_body, 200
+        row = Sessions(date=data.get('date'),
+                       duration_minutes=data.get('duration_minutes'),
+                       training_plan_id=data.get('training_plan_id'))
+        db.session.add(row)
+        db.session.commit()
+        response_body['message'] = 'Sesión creada exitosamente'
+        response_body['results'] = row.serialize()
+        return response_body, 200
 
-    
+@api.route('/exercises', methods=['GET', 'POST'])
+@jwt_required()
+def exercises():
+    response_body = {}
+    if request.method == 'GET':
+        rows = db.session.execute(db.select(Exercises)).scalars()
+        result = [row.serialize() for row in rows]
+        response_body['message'] = 'Listado de Ejercicios'
+        response_body['results'] = result
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json
+        row = Exercises(name=data.get('name'))
+        db.session.add(row)
+        db.session.commit()
+        response_body['message'] = 'Ejercicio creado exitosamente'
+        response_body['results'] = row.serialize()
+        return response_body, 200
+
+@api.route('/session-exercises', methods=['GET', 'POST'])
+@jwt_required()
+def session_exercises():
+    response_body = {}
+    if request.method == 'GET':
+        rows = db.session.execute(db.select(SessionExercises)).scalars()
+        result = [row.serialize() for row in rows]
+        response_body['message'] = 'Listado de Ejercicios por Sesión'
+        response_body['results'] = result
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json
+        row = SessionExercises(session_id=data.get('session_id'),
+                               exercise_id=data.get('exercise_id'),
+                               repetitions=data.get('repetitions'),
+                               series=data.get('series'),
+                               duration_minutes=data.get('duration_minutes'),
+                               resting_time=data.get('resting_time'),
+                               is_done=data.get('is_done'))
+        db.session.add(row)
+        db.session.commit()
+        response_body['message'] = 'Ejercicio añadido a la sesión exitosamente'
+        response_body['results'] = row.serialize()
+        return response_body, 200
+
+
+@api.route('/training-exercises', methods=['GET', 'POST'])
+@jwt_required()
+def training_exercises():
+    response_body = {}
+    if request.method == 'GET':
+        rows = db.session.execute(db.select(TrainingExercises)).scalars()
+        result = [row.serialize() for row in rows]
+        response_body['message'] = 'Listado de Ejercicios por Plan de Entrenamiento'
+        response_body['results'] = result
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json
+        row = TrainingExercises(training_plan_id=data.get('training_plan_id'),
+                                exercise_id=data.get('exercise_id'),
+                                duration_minutes=data.get('duration_minutes'),
+                                repetitions=data.get('repetitions'),
+                                resting_time=data.get('resting_time'),
+                                series=data.get('series'))
+        db.session.add(row)
+        db.session.commit()
+        response_body['message'] = 'Ejercicio añadido al plan de entrenamiento exitosamente'
+        response_body['results'] = row.serialize()
+        return response_body, 200
