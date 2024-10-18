@@ -191,6 +191,7 @@ class Muscles(db.Model):
            'is_front': self.is_front,
            'image_url_main': self.image_url_main,
            'image_url_secondary': self.image_url_secondary}
+           
 
 
 
