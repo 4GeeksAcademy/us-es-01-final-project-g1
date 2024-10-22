@@ -30,7 +30,9 @@ const getState = ({ getStore, getActions, setStore }) => {
 				setStore({ demo: demo });  // Reset the global store
 			},
 			login: async (formdata) => {
-				const uri = '/login'
+				const uri = `${process.env.BACKEND_URL}/api/login`
+				console.log(uri);
+				
 				const options = {
 					method: 'POST',
 					headers: {
