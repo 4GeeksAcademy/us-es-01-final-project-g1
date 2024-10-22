@@ -47,6 +47,11 @@ const getState = ({ getStore, getActions, setStore }) => {
 				if (!response.ok) {
 					return
 				}
+			},
+			register:  (formdata) => {
+			    console.log(formdata);
+				
+				return formdata
 			}
 		}
 	};
