@@ -1,12 +1,12 @@
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: {
-			demo: [{title: "FIRST", background: "white", initial: "white"},
-				     {title: "SECOND", background: "white", initial: "white"}],
+			demo: [{ title: "FIRST", background: "white", initial: "white" },
+			{ title: "SECOND", background: "white", initial: "white" }],
 			message: null,
 		},
 		actions: {
-			exampleFunction: () => {getActions().changeColor(0, "green");},
+			exampleFunction: () => { getActions().changeColor(0, "green"); },
 			getMessage: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/hello`
 				const options = {
@@ -28,6 +28,23 @@ const getState = ({ getStore, getActions, setStore }) => {
 					return element;
 				});
 				setStore({ demo: demo });  // Reset the global store
+			},
+			login: async (formdata) => {
+				const uri = '/login'
+				const options = {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(formdata),
+				};
+				const response = await fetch(uri, options);
+				console.log(response);
+
+
+				if (!response.ok) {
+					return
+				}
 			}
 		}
 	};
