@@ -3,7 +3,9 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import injectContext from "./store/appContext";
 // Custom components
 // Custom pages / views
-import { Home } from "./pages/Home.jsx";
+import { Register } from "./component/Register.jsx";
+import { Dashboard } from "./pages/Dashboard.jsx";
+import { Login } from "./component/Login.jsx";
 
 
 
@@ -17,7 +19,9 @@ const Layout = () => {
         <div>
             <BrowserRouter basename={basename}>
                 <Routes>
-                    <Route element={<Home />} path="/" />
+                    <Route element={<Dashboard />} path="/" />
+                    <Route element={<Login />} path="/login" />
+                    <Route element={<Register />} path="/register" />
                     <Route element={<h1>Not found!</h1>} path="*" />
                 </Routes>
             </BrowserRouter>
