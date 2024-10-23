@@ -32,7 +32,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 			login: async (formdata) => {
 				const uri = `${process.env.BACKEND_URL}/api/login`
 				console.log(uri);
-				
+
 				const options = {
 					method: 'POST',
 					headers: {
@@ -48,11 +48,11 @@ const getState = ({ getStore, getActions, setStore }) => {
 					return
 				}
 			},
-			register:  (formdata) => {
-			    console.log(formdata);
-				
+			register: (formdata) => {
+				console.log(formdata);
+
 				return formdata
-			}
+			},
 		}
 	};
 };
