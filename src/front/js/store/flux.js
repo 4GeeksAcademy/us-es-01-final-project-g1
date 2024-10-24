@@ -48,6 +48,11 @@ const getState = ({ getStore, getActions, setStore }) => {
 				localStorage.setItem("user", JSON.stringify(data.results))
 				setStore({ isLogin: true, isAdmin: data.results.is_admin, user: data.results })
 			},
+			logout: () => {
+				localStorage.removeItem("token");
+				localStorage.removeItem("user");
+				setStore({ isLogin: false, isAdmin: false, user: {} });
+			},
 			register: async (formdata) => {
 				const uri = `${process.env.BACKEND_URL}/api/register`
 				const options = {
