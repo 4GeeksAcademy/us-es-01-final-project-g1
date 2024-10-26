@@ -1,12 +1,14 @@
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: {
-			demo: [{title: "FIRST", background: "white", initial: "white"},
-				     {title: "SECOND", background: "white", initial: "white"}],
 			message: null,
+			isLogin: false,
+			user: {},
+			isAdmin: false,
+			accountExist: "void" //void, exist, notExist, 
 		},
 		actions: {
-			exampleFunction: () => {getActions().changeColor(0, "green");},
+			exampleFunction: () => { getActions().changeColor(0, "green"); },
 			getMessage: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/hello`
 				const options = {
@@ -28,7 +30,50 @@ const getState = ({ getStore, getActions, setStore }) => {
 					return element;
 				});
 				setStore({ demo: demo });  // Reset the global store
-			}
+			},
+			login: async (formdata) => {
+				const uri = `${process.env.BACKEND_URL}/api/login`
+				const options = {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(formdata),
+				};
+				const response = await fetch(uri, options);
+				console.log(response)
+				if (!response.ok) {
+					setStore({ ...store, accountExist: "notExist" })
+				}
+				const data = await response.json()
+				localStorage.setItem("token", data.access_token);
+				localStorage.setItem("user", JSON.stringify(data.results))
+				setStore({ isLogin: true, isAdmin: data.results.is_admin, user: data.results, accountExist: "exist"  })
+			},
+			logout: () => {
+				localStorage.removeItem("token");
+				localStorage.removeItem("user");
+				setStore({ accountExist: "void", isLogin: false, isAdmin: false, user: {} });
+			},
+			register: async (formdata) => {
+				const uri = `${process.env.BACKEND_URL}/api/register`
+				const options = {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(formdata),
+				};
+				const response = await fetch(uri, options);
+				console.log(response);
+				if (!response.ok) {
+					return
+				}
+				const data = await response.json()
+				localStorage.setItem("token", data.access_token);
+				localStorage.setItem("user", JSON.stringify(data.results))
+				setStore({ accountExist: "exist", isLogin: true, isAdmin: data.results.is_admin, user: data.results })
+			},
 		}
 	};
 };
