@@ -43,7 +43,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				const response = await fetch(uri, options);
 				console.log(response)
 				if (!response.ok) {
-					setStore({ ...store, accountExist: "notExist" })
+					setStore({accountExist: "notExist" })
 				}
 				const data = await response.json()
 				localStorage.setItem("token", data.access_token);
