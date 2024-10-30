@@ -23,8 +23,6 @@ export const CreatePlanForm = () => {
             registration_date: "12/12/12",
             finalization_date: "12/12/12",
             quantity_session: quantitySession,
-            is_active: user.is_active,
-            user_id: user.id,
             level: level
         }
         actions.createPlan(data, navigate)

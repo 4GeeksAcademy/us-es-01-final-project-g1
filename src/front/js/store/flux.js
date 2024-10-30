@@ -65,6 +65,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				navigate('/dashboard')
 			},
 			createPlan: async (data, navigate) => {
+				console.log(data)
 				const uri = `${process.env.BACKEND_URL}/api/training-plans`
 				const authToken = localStorage.getItem("token")
 				const options = {
