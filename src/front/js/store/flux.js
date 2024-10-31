@@ -7,7 +7,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 			isAdmin: false,
 			accountExist: "void",  //void, exist, notExist,
 			errorMessage: null,
-			trainingPlans: {}
+			trainingPlans: {},
+			isTrainingPlansLoading: false
 		},
 		actions: {
 			exampleFunction: () => { getActions().changeColor(0, "green"); },
@@ -43,7 +44,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				localStorage.removeItem("user");
 				setStore({ accountExist: "void", isLogin: false, isAdmin: false, user: {} });
 			},
-			isLogin: () => { 
+			isLogin: () => {
 				const authToken = localStorage.getItem("token")
 				const user = localStorage.getItem("user")
 				console.log("lago", user, authToken)
@@ -76,7 +77,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				navigate('/dashboard')
 			},
 			createPlan: async (data, navigate) => {
-				console.log(data)
+
 				const uri = `${process.env.BACKEND_URL}/api/training-plans`
 				const authToken = localStorage.getItem("token")
 				const options = {
@@ -90,20 +91,14 @@ const getState = ({ getStore, getActions, setStore }) => {
 				const response = await fetch(uri, options)
 
 				if (!response.ok) {
-					return
+					return;
 				}
-				const newTrainingPlan = await response.json()
-				console.log("results", newTrainingPlan)
-				const prevData = getStore()
-				console.log("prevData", prevData)
-				setStore({ trainingPlans: [...getStore().trainingPlans.results, newTrainingPlan.results] })
 				navigate("/dashboard")
+				return response
 			},
 			getTrainingPlans: async () => {
-				console.log("entre en mis gtp")
 				const uri = `${process.env.BACKEND_URL}/api/training-plans`
 				const authToken = localStorage.getItem("token")
-
 				const options = {
 					method: 'GET',
 					headers: {
@@ -111,9 +106,18 @@ const getState = ({ getStore, getActions, setStore }) => {
 						Authorization: ` Bearer ${authToken}`
 					}
 				}
+				setStore({ ...getStore(), isTrainingPlansLoading: true })
 				const response = await fetch(uri, options)
 				const trainingPlans = await response.json()
-				setStore({ trainingPlans })
+				if (!response.ok) {
+					setStore({ isTrainingPlansLoading: false })
+					return
+				}
+		
+				setStore({
+					trainingPlans,
+					isTrainingPlansLoading: false
+				})
 			}
 		}
 	};

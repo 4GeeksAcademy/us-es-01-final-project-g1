@@ -37,8 +37,8 @@ export const CreatePlanForm = () => {
     return (
         <FormLayout title={"Create your Exercise Plan"} onSubmit={createPlan} actionText={"Create Plan"}>
             <Input label="Name" id="name" value={name} onChange={(e) => setName(e.target.value)} type={"text"} />
-            <Input label="Registration Date" id="registrationDate" value={formatDate(registrationDate)} onChange={(e) => setRegistrationDate(e.target.value)} type={"date"} />
-            <Input label="Finalization Date" id="finalizationDate" value={formatDate(finalizationDate)} onChange={(e) => setFinalizationDate(e.target.value)} type={"date"} />
+            <Input label="Registration Date" id="registrationDate" value={registrationDate} onChange={(e) => setRegistrationDate(e.target.value)} type={"date"} />
+            <Input label="Finalization Date" id="finalizationDate" value={finalizationDate} onChange={(e) => setFinalizationDate(e.target.value)} type={"date"} />
             <Input label="Quantity Sessions" id="quantitySesions" value={quantitySession} onChange={(e) => setQuantitySession(e.target.value)} type={"number"} />
             <div className='mb-3'>
                 <label htmlFor={"level"} className='form-label'>
