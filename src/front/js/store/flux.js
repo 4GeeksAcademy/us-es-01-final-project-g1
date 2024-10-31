@@ -43,6 +43,10 @@ const getState = ({ getStore, getActions, setStore }) => {
 				localStorage.removeItem("user");
 				setStore({ accountExist: "void", isLogin: false, isAdmin: false, user: {} });
 			},
+			islogin: () => {
+				console.log("isloging")
+				// state.actions.getTrainingPlans(); //solo si esta logeado
+			},
 			register: async (formdata, navigate) => {
 				const uri = `${process.env.BACKEND_URL}/api/register`
 				const options = {
@@ -85,9 +89,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 				console.log("results", newTrainingPlan)
 				const prevData = getStore()
 				console.log("prevData", prevData)
-				setStore({ ...prevData, trainingPlans: [...prevData.trainingPlans.results, newTrainingPlan.results] })
+				setStore({ trainingPlans: [...getStore().trainingPlans.results, newTrainingPlan.results] })
 				navigate("/dashboard")
-
 			},
 			getTrainingPlans: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/training-plans`
@@ -103,8 +106,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 				const response = await fetch(uri, options)
 				const trainingPlans = await response.json()
 				setStore({ trainingPlans })
-
-
 			}
 		}
 	};
