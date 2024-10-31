@@ -5,22 +5,24 @@ const getState = ({ getStore, getActions, setStore }) => {
 			isLogin: false,
 			user: {},
 			isAdmin: false,
-			accountExist: "void",  //void, exist, notExist,
 			errorMessage: null,
 			trainingPlans: {},
 			isTrainingPlansLoading: false
 		},
 		actions: {
-			exampleFunction: () => { getActions().changeColor(0, "green"); },
-			changeColor: (index, color) => {
-				const store = getStore();  // Get the store
-				const demo = store.demo.map((element, i) => {
-					if (i === index) element.background = color;
-					return element;
-				});
-				setStore({ demo: demo });  // Reset the global store
+			resetState: () =>{
+				return setStore({ 		
+					message: null,
+					isLogin: false,
+					user: {},
+					isAdmin: false,
+					errorMessage: null,
+					trainingPlans: {},
+					isTrainingPlansLoading: false  
+				})
 			},
 			login: async (formdata, navigate) => {
+				setStore({ errorMessage: null, })
 				const uri = `${process.env.BACKEND_URL}/api/login`
 				const options = {
 					method: 'POST',
@@ -30,19 +32,21 @@ const getState = ({ getStore, getActions, setStore }) => {
 					body: JSON.stringify(formdata),
 				};
 				const response = await fetch(uri, options);
-				if (!response.ok) {
-					setStore({ accountExist: "notExist" })
-				}
 				const data = await response.json()
+				if (!response.ok) {
+					setStore({ message: data.message, errorMessage: data.message })
+					return alert(data.message)
+				}
+
 				localStorage.setItem("token", data.access_token);
 				localStorage.setItem("user", JSON.stringify(data.results))
-				setStore({ isLogin: true, isAdmin: data.results.is_admin, user: data.results, accountExist: "exist" })
+				setStore({ isLogin: true, isAdmin: data?.results?.is_admin, user: data?.results, message: data.message })
 				navigate('/dashboard')
 			},
 			logout: () => {
 				localStorage.removeItem("token");
 				localStorage.removeItem("user");
-				setStore({ accountExist: "void", isLogin: false, isAdmin: false, user: {} });
+				setStore({ isLogin: false, isAdmin: false, user: {}, message: "null", errorMessage: null, });
 			},
 			isLogin: () => {
 				const authToken = localStorage.getItem("token")
@@ -50,12 +54,13 @@ const getState = ({ getStore, getActions, setStore }) => {
 				console.log("lago", user, authToken)
 
 				if (Boolean(authToken) && Boolean(user)) {
-					setStore({ isLogin: true, accountExist: "exist" })
+					setStore({ isLogin: true, })
 					getActions().getTrainingPlans();
 				}
 
 			},
 			register: async (formdata, navigate) => {
+				setStore({ errorMessage: null,   })
 				const uri = `${process.env.BACKEND_URL}/api/register`
 				const options = {
 					method: 'POST',
@@ -65,19 +70,17 @@ const getState = ({ getStore, getActions, setStore }) => {
 					body: JSON.stringify(formdata),
 				};
 				const response = await fetch(uri, options);
-				if (!response.ok) {
-					const errorMessage = await response.json()
-					setStore({ errorMessage: errorMessage.message })
-					return
-				}
 				const data = await response.json()
+				if (!response.ok) {
+					setStore({ errorMessage: data.message, message: data.message, })
+					return alert(data.message)
+				}
 				localStorage.setItem("token", data.access_token);
 				localStorage.setItem("user", JSON.stringify(data.results))
-				setStore({ accountExist: "exist", isLogin: true, isAdmin: data.results.is_admin, user: data.results })
+				setStore({ isLogin: true, isAdmin: data.results.is_admin, user: data.results, message: data.message })
 				navigate('/dashboard')
 			},
 			createPlan: async (data, navigate) => {
-
 				const uri = `${process.env.BACKEND_URL}/api/training-plans`
 				const authToken = localStorage.getItem("token")
 				const options = {
@@ -113,7 +116,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					setStore({ isTrainingPlansLoading: false })
 					return
 				}
-		
+
 				setStore({
 					trainingPlans,
 					isTrainingPlansLoading: false

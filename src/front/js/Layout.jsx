@@ -10,7 +10,8 @@ import { Dashboard } from "./pages/Dashboard.jsx";
 import { AboutUs } from "./pages/AboutUs.jsx";
 import { ContactUs } from "./pages/ContactUs.jsx";
 import { Navbar } from "./component/Navbar.jsx";
-import { CreatePlanForm } from "./component/CreatePlanForm.jsx";
+import { CreatePlanForm } from "./pages/trainingPlans/CreatePlanForm.jsx";
+import { TrainingPlans } from "./pages/trainingPlans/TrainingPlans.jsx";
 
 
 
@@ -31,6 +32,7 @@ const Layout = () => {
                 <Route element={<AboutUs />} path="/about-us" />
                 <Route element={<ContactUs />} path="/contact-us" />
                 <Route element={<CreatePlanForm />} path="/create-plan" />
+                <Route element={<TrainingPlans />} path="/training-plan" />
                 <Route element={<h1>Not found!</h1>} path="*" />
             </Routes>
         </BrowserRouter>

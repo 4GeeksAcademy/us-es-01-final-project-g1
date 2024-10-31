@@ -1,10 +1,10 @@
 import React, { useContext, useState, } from 'react'
-import { FormLayout } from './FormLayout.jsx'
-import { Input } from './Input.jsx'
-import { Context } from '../store/appContext.js'
 import Select from 'react-select'
-import { formatDate } from '../helper/formatDate.js'
 import { useNavigate } from 'react-router-dom'
+import { FormLayout } from '../../component/FormLayout.jsx'
+import { Input } from '../../component/Input.jsx'
+import { Context } from '../../store/appContext.js'
+
 
 
 export const CreatePlanForm = () => {
@@ -26,7 +26,7 @@ export const CreatePlanForm = () => {
             level: level
         }
         actions.createPlan(data, navigate)
-        
+
     }
     const levelOptions = [
         { value: 'begginer', label: 'Begginer' },
@@ -50,12 +50,3 @@ export const CreatePlanForm = () => {
     )
 }
 
-
-
-// (name=data.get('name'),
-//                             level=data.get('level'),
-//                             registration_date=data.get('registration_date'),
-//                             finalization_date=data.get('finalization_date'),
-//                             quantity_session=data.get('quantity_session'),
-//                             is_active=data.get('is_active'),
-//                             user_id=current_user['user_id'])

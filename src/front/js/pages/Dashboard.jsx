@@ -12,6 +12,8 @@ export const Dashboard = () => {
   const { store, actions } = useContext(Context)
   const authToken = localStorage.getItem("token")
   const user = localStorage.getItem("user")
+
+  console.log(store)
   
   useEffect(() => actions.isLogin(), []);
   return (
