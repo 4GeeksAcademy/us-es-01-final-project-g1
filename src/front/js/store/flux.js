@@ -43,9 +43,16 @@ const getState = ({ getStore, getActions, setStore }) => {
 				localStorage.removeItem("user");
 				setStore({ accountExist: "void", isLogin: false, isAdmin: false, user: {} });
 			},
-			islogin: () => {
-				console.log("isloging")
-				// state.actions.getTrainingPlans(); //solo si esta logeado
+			isLogin: () => { 
+				const authToken = localStorage.getItem("token")
+				const user = localStorage.getItem("user")
+				console.log("lago", user, authToken)
+
+				if (Boolean(authToken) && Boolean(user)) {
+					setStore({ isLogin: true, accountExist: "exist" })
+					getActions().getTrainingPlans();
+				}
+
 			},
 			register: async (formdata, navigate) => {
 				const uri = `${process.env.BACKEND_URL}/api/register`
@@ -93,6 +100,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				navigate("/dashboard")
 			},
 			getTrainingPlans: async () => {
+				console.log("entre en mis gtp")
 				const uri = `${process.env.BACKEND_URL}/api/training-plans`
 				const authToken = localStorage.getItem("token")
 

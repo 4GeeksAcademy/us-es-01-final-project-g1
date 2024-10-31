@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { Context } from '../store/appContext.js'
 import { CardInfo } from '../component/CardInfo.jsx'
 import { CardIndicator } from '../component/CardIndicator.jsx'
@@ -8,8 +8,13 @@ import { CreateCard } from '../component/CreateCard.jsx'
 
 
 export const Dashboard = () => {
-  const { store, } = useContext(Context)
+  const { store, actions } = useContext(Context)
 
+
+  useEffect(() => {
+    console.log("ESTOY RENDERIZANDO MI DASHBOARD",store)
+    // state.actions.isLogin();  
+  }, []);
 
   return (
     <main>
