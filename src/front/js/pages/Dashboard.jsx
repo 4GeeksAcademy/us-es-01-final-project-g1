@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { CardIndicator } from '../component/CardIndicator.jsx'
 import { CreateCard } from '../component/CreateCard.jsx'
 import { CardInfo } from '../component/CardInfo.jsx'
@@ -12,8 +12,14 @@ export const Dashboard = () => {
   const { store, actions } = useContext(Context)
   const authToken = localStorage.getItem("token")
   const user = localStorage.getItem("user")
-  
-  useEffect(() => actions.isLogin(), []);
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!store.isLogin) {
+      navigate("/")
+    }
+  }, []);
+
   return (
     <main className='dashboard-container'>
       <div className='main-overview'>
@@ -35,10 +41,10 @@ export const Dashboard = () => {
         <div className="row">
 
           <div className='col col-sm-12 col-md-6 col-lg-6'>
-          {store.isTrainingPlansLoading ? <Loader /> : store?.trainingPlans?.results?.length ? (
+            {store.isTrainingPlansLoading ? <Loader /> : store?.trainingPlans?.results?.length ? (
               <CardInfo model={"training_plans"} title={"Planes de Ejercicio"} subtitle={"Los Mejores planes de Ejercicios"} description={"Aqui puedes encontrar un plan que se adapte a tus necesidades"} />
             ) : (<CreateCard />)}
-            </div>
+          </div>
 
           <div className='col col-sm-12 col-md-6 col-lg-6'>
             <CreateCard />
@@ -59,7 +65,6 @@ export const Dashboard = () => {
           </div>
         </div>
       </div>
-
     </main>
   )
 }
