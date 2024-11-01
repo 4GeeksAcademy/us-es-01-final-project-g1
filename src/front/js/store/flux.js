@@ -7,18 +7,19 @@ const getState = ({ getStore, getActions, setStore }) => {
 			isAdmin: false,
 			errorMessage: null,
 			trainingPlans: {},
-			isTrainingPlansLoading: false
+			isTrainingPlansLoading: false,
+			currentTrainingPlan: {}
 		},
 		actions: {
-			resetState: () =>{
-				return setStore({ 		
+			resetState: () => {
+				return setStore({
 					message: null,
 					isLogin: false,
 					user: {},
 					isAdmin: false,
 					errorMessage: null,
 					trainingPlans: {},
-					isTrainingPlansLoading: false  
+					isTrainingPlansLoading: false
 				})
 			},
 			login: async (formdata, navigate) => {
@@ -51,16 +52,15 @@ const getState = ({ getStore, getActions, setStore }) => {
 			isLogin: () => {
 				const authToken = localStorage.getItem("token")
 				const user = localStorage.getItem("user")
-				console.log("lago", user, authToken)
 
 				if (Boolean(authToken) && Boolean(user)) {
 					setStore({ isLogin: true, })
-					getActions().getTrainingPlans();
+					return getActions().getTrainingPlans();
 				}
 
 			},
 			register: async (formdata, navigate) => {
-				setStore({ errorMessage: null,   })
+				setStore({ errorMessage: null, })
 				const uri = `${process.env.BACKEND_URL}/api/register`
 				const options = {
 					method: 'POST',
@@ -98,6 +98,30 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 				navigate("/dashboard")
 				return response
+			},
+			getCurrentTrainingPlan: (plan) => {
+				setStore({ ...getStore(), currentTrainingPlan: plan, })
+			},
+			editPlan: async (formData, navigate, currentPlanId) => {
+				const uri = `${process.env.BACKEND_URL}/api/training-plans/${currentPlanId}`
+				const authToken = localStorage.getItem("token")
+				const options = {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: ` Bearer ${authToken}`
+					},
+					body: JSON.stringify(formData),
+				}
+				const response = await fetch(uri, options)
+				const data = await response.json()
+				if (!response.ok) {
+					setStore({ errorMessage: data.message, message: data.message, })
+					return alert(data.message)
+				}
+				setStore({ ...getStore(), trainingPlans: data.results })
+				navigate("/training-plan")
+				// return response
 			},
 			getTrainingPlans: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/training-plans`

@@ -7,27 +7,29 @@ import { Context } from '../../store/appContext.js'
 
 
 
-export const CreatePlanForm = () => {
+export const EditPlanForm = () => {
     const { actions, store } = useContext(Context)
     const user = JSON.parse(localStorage.getItem("user"))
-    const [name, setName] = useState("")
-    const [registrationDate, setRegistrationDate] = useState("") // definir formato de fechas
-    const [finalizationDate, setFinalizationDate] = useState("") // definir formato de fechas
-    const [quantitySession, setQuantitySession] = useState("")
-    const [level, setLevel] = useState("begginer") // 'begginer', 'intermediate', 'advanced',
+    const [name, setName] = useState(store.currentTrainingPlan.name)
+    const [registrationDate, setRegistrationDate] = useState(store.currentTrainingPlan.registration_date) // definir formato de fechas
+    const [finalizationDate, setFinalizationDate] = useState(store.currentTrainingPlan.finalization_date) // definir formato de fechas
+    const [quantitySession, setQuantitySession] = useState(store.currentTrainingPlan.quantity_session)
+    const [level, setLevel] = useState(store.currentTrainingPlan.level) // 'begginer', 'intermediate', 'advanced',
     const navigate = useNavigate()
-    const createPlan = (e) => {
+
+    const onEdit = (e) => {
         e.preventDefault()
         const data = {
             name,
             registration_date: registrationDate,
             finalization_date: finalizationDate,
             quantity_session: quantitySession,
-            level: level
+            level: level,
+            is_active: store.currentTrainingPlan.is_active
         }
-        actions.createPlan(data, navigate)
+        actions.editPlan(data, navigate, store.currentTrainingPlan.id)
     }
-    
+
     const levelOptions = [
         { value: 'begginer', label: 'Begginer' },
         { value: 'intermediate', label: 'Intermediate' },
@@ -35,7 +37,7 @@ export const CreatePlanForm = () => {
     ]
 
     return (
-        <FormLayout title={"Create your Exercise Plan"} onSubmit={createPlan} actionText={"Create Plan"}>
+        <FormLayout title={"Edita tu Plan de Entrenamiento"} onSubmit={onEdit} actionText={"Edit Plan"}>
             <Input label="Name" id="name" value={name} onChange={(e) => setName(e.target.value)} type={"text"} />
             <Input label="Registration Date" id="registrationDate" value={registrationDate} onChange={(e) => setRegistrationDate(e.target.value)} type={"date"} />
             <Input label="Finalization Date" id="finalizationDate" value={finalizationDate} onChange={(e) => setFinalizationDate(e.target.value)} type={"date"} />

@@ -12,8 +12,6 @@ export const Dashboard = () => {
   const { store, actions } = useContext(Context)
   const authToken = localStorage.getItem("token")
   const user = localStorage.getItem("user")
-
-  console.log(store)
   
   useEffect(() => actions.isLogin(), []);
   return (
@@ -38,7 +36,7 @@ export const Dashboard = () => {
 
           <div className='col col-sm-12 col-md-6 col-lg-6'>
           {store.isTrainingPlansLoading ? <Loader /> : store?.trainingPlans?.results?.length ? (
-              <CardInfo title={"Planes de Ejercicio"} subtitle={"Los Mejores planes de Ejercicios"} description={"Aqui puedes encontrar un plan que se adapte a tus necesidades"} />
+              <CardInfo model={"training_plans"} title={"Planes de Ejercicio"} subtitle={"Los Mejores planes de Ejercicios"} description={"Aqui puedes encontrar un plan que se adapte a tus necesidades"} />
             ) : (<CreateCard />)}
             </div>
 
