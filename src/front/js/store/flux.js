@@ -8,7 +8,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 			errorMessage: null,
 			trainingPlans: {},
 			isTrainingPlansLoading: false,
-			currentTrainingPlan: {}
+			currentTrainingPlan: {},
+			action: ""
 		},
 		actions: {
 			resetState: () => {
@@ -80,33 +81,22 @@ const getState = ({ getStore, getActions, setStore }) => {
 				setStore({ isLogin: true, isAdmin: data.results.is_admin, user: data.results, message: data.message })
 				navigate('/dashboard')
 			},
-			createPlan: async (data, navigate) => {
-				const uri = `${process.env.BACKEND_URL}/api/training-plans`
-				const authToken = localStorage.getItem("token")
-				const options = {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: ` Bearer ${authToken}`
-					},
-					body: JSON.stringify(data),
-				}
-				const response = await fetch(uri, options)
-
-				if (!response.ok) {
-					return;
-				}
-				navigate("/dashboard")
-				return response
+			setAction: (action) => {
+				setStore({ ...getStore(), action })
 			},
 			getCurrentTrainingPlan: (plan) => {
-				setStore({ ...getStore(), currentTrainingPlan: plan, })
+				setStore({ ...getStore(), currentTrainingPlan: plan })
 			},
-			editPlan: async (formData, navigate, currentPlanId) => {
-				const uri = `${process.env.BACKEND_URL}/api/training-plans/${currentPlanId}`
+			crudTrainingPlans: async ({ formData, navigate, currentPlanId, action }) => {
+				const method = {
+					create: "POST",
+					edit: "PUT",
+					delete: "DELETE"
+				}
+				const uri = `${process.env.BACKEND_URL}/api/training-plans${action !== "create" ? `/${currentPlanId}` : ""}`
 				const authToken = localStorage.getItem("token")
 				const options = {
-					method: 'PUT',
+					method: method[action],
 					headers: {
 						'Content-Type': 'application/json',
 						Authorization: ` Bearer ${authToken}`
@@ -119,9 +109,11 @@ const getState = ({ getStore, getActions, setStore }) => {
 					setStore({ errorMessage: data.message, message: data.message, })
 					return alert(data.message)
 				}
-				setStore({ ...getStore(), trainingPlans: data.results })
+				console.log("data adentro de crudTr", data)
+				setStore({ ...getStore(), message: data.message })
 				navigate("/training-plan")
-				// return response
+
+				return response
 			},
 			getTrainingPlans: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/training-plans`
@@ -137,11 +129,12 @@ const getState = ({ getStore, getActions, setStore }) => {
 				const response = await fetch(uri, options)
 				const trainingPlans = await response.json()
 				if (!response.ok) {
-					setStore({ isTrainingPlansLoading: false })
+					setStore({ ...getStore(), isTrainingPlansLoading: false })
 					return
 				}
 
 				setStore({
+					...getStore(),
 					trainingPlans,
 					isTrainingPlansLoading: false
 				})

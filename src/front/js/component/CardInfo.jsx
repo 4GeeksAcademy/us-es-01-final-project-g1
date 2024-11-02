@@ -4,7 +4,13 @@ import { FaClock } from 'react-icons/fa'
 import { Link } from 'react-router-dom'
 import { useModels } from '../hooks/useModels'
 
-export const CardInfo = ({ title, subtitle, description, durationTime, model }) => {
+
+export const CardInfo = ({ title, subtitle, description, durationTime, model, setupItems }) => {
+  const items = {
+    item_1:setupItems["item_1"],
+    item_2:setupItems["item_2"],
+    item_3:setupItems["item_3"],
+  }
 
   const { mapViewModels, mapModels, mapRoutesModels } = useModels()
 
@@ -26,13 +32,13 @@ export const CardInfo = ({ title, subtitle, description, durationTime, model }) 
           <li className='tags'>
             <ul>
               <li>
-                <a href='#'>Beginners</a>
+                 <Link to={mapRoutesModels[model]} onClick={(e)=>items?.item_1.onClick(e)}>Beginners</Link>
               </li>
               <li>
-                <a href='#'>Medium</a>
+                 <Link to={mapRoutesModels[model]}>Medium</Link>
               </li>
               <li>
-                <a href='#'>Expert</a>
+                 <Link to={mapRoutesModels[model]}>Expert</Link>
               </li>
             </ul>
           </li>

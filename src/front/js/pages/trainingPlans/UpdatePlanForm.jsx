@@ -9,7 +9,7 @@ import { useLevelOptions } from '../../hooks/useLevelOptions.js'
 
 
 export const UpdatePlanForm = () => {
-    const {levelOptions} = useLevelOptions()
+    const { levelOptions } = useLevelOptions()
     const { actions, store } = useContext(Context)
     const user = JSON.parse(localStorage.getItem("user"))
     const [name, setName] = useState(store.currentTrainingPlan.name)
@@ -21,7 +21,7 @@ export const UpdatePlanForm = () => {
 
     const onEdit = (e) => {
         e.preventDefault()
-        const data = {
+        const formData = {
             name,
             registration_date: registrationDate,
             finalization_date: finalizationDate,
@@ -29,11 +29,11 @@ export const UpdatePlanForm = () => {
             level: level.value,
             is_active: store.currentTrainingPlan.is_active
         }
-        actions.editPlan(data, navigate, store.currentTrainingPlan.id)
+        return actions.crudTrainingPlans({ formData, navigate, currentPlanId: store.currentTrainingPlan.id, action: store.action })
     }
 
     return (
-        <FormLayout title={"Edita tu Plan de Entrenamiento"} onSubmit={onEdit} actionText={"Edit Plan"}>
+        <FormLayout title={`${store.action === "edit" && "Edita"} tu Plan de Entrenamiento`} onSubmit={onEdit} actionText={"Edit Plan"}>
             <Input label="Name" id="name" value={name} onChange={(e) => setName(e.target.value)} type={"text"} />
             <Input label="Registration Date" id="registrationDate" value={formatDate(registrationDate)} onChange={(e) => setRegistrationDate(e.target.value)} type={"date"} />
             <Input label="Finalization Date" id="finalizationDate" value={formatDate(finalizationDate)} onChange={(e) => setFinalizationDate(e.target.value)} type={"date"} />
@@ -42,7 +42,7 @@ export const UpdatePlanForm = () => {
                 <label htmlFor={"level"} className='form-label'>
                     Level
                 </label>
-                <Select value={level} options={levelOptions}  onChange={(data) => setLevel(data)} />
+                <Select value={level} options={levelOptions} onChange={(data) => setLevel(data)} />
             </div>
         </FormLayout >
     )
