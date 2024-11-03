@@ -1,12 +1,14 @@
-import React from 'react'
+import React, { useContext } from 'react'
+import { Context } from '../store/appContext'
 
 export const useItems = () => {
 
+  const { actions } = useContext(Context)
   const detailsPlanLevelDetails = {
-    item_1: {onClick: (a)=>{console.log("1b", a)}},
-    item_2: {onClick: (a)=>{console.log("2b", a)}},
-    item_3: {onClick: (a)=>{console.log("3b", a)}},
+    item_1: { onClick: () => actions.setTrainingPlansFilters("begginer") },
+    item_2: { onClick: () => actions.setTrainingPlansFilters("intermediate") },
+    item_3: { onClick: () => actions.setTrainingPlansFilters("advanced") },
   }
 
-  return {detailsPlanLevelDetails}
+  return { detailsPlanLevelDetails }
 }

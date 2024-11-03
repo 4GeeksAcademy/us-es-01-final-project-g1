@@ -12,11 +12,11 @@ export const UpdatePlanForm = () => {
     const {levelOptions} = useLevelOptions()
     const { actions, store } = useContext(Context)
     const user = JSON.parse(localStorage.getItem("user"))
-    const [name, setName] = useState(store.currentTrainingPlan.name)
-    const [registrationDate, setRegistrationDate] = useState(store.currentTrainingPlan.registration_date) // definir formato de fechas
-    const [finalizationDate, setFinalizationDate] = useState(store.currentTrainingPlan.finalization_date) // definir formato de fechas
-    const [quantitySession, setQuantitySession] = useState(store.currentTrainingPlan.quantity_session)
-    const [level, setLevel] = useState(levelOptions.find(option => option.value === store.currentTrainingPlan.level)) // 'begginer', 'intermediate', 'advanced',
+    const [name, setName] = useState(store.trainingPlansStates.currentTrainingPlan.name)
+    const [registrationDate, setRegistrationDate] = useState(store.trainingPlansStates.currentTrainingPlan.registration_date) // definir formato de fechas
+    const [finalizationDate, setFinalizationDate] = useState(store.trainingPlansStates.currentTrainingPlan.finalization_date) // definir formato de fechas
+    const [quantitySession, setQuantitySession] = useState(store.trainingPlansStates.currentTrainingPlan.quantity_session)
+    const [level, setLevel] = useState(levelOptions.find(option => option.value === store.trainingPlansStates.currentTrainingPlan.level)) // 'begginer', 'intermediate', 'advanced',
     const navigate = useNavigate()
 
     const onEdit = (e) => {
@@ -27,9 +27,9 @@ export const UpdatePlanForm = () => {
             finalization_date: finalizationDate,
             quantity_session: quantitySession,
             level: level.value,
-            is_active: store.currentTrainingPlan.is_active
+            is_active: store.trainingPlansStates.currentTrainingPlan.is_active
         }
-        actions.editPlan(data, navigate, store.currentTrainingPlan.id)
+        actions.editPlan(data, navigate, store.trainingPlansStates.currentTrainingPlan.id)
     }
 
     return (

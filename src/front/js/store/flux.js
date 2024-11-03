@@ -1,27 +1,24 @@
+const initialState = {
+	message: null,
+	isLogin: false,
+	user: {},
+	isAdmin: false,
+	errorMessage: null,
+	trainingPlansStates: {
+		trainingPlans: [],
+		isTrainingPlansLoading: false,
+		currentTrainingPlan: {},
+		filter: "",
+		action: ""
+	},
+}
+
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
-		store: {
-			message: null,
-			isLogin: false,
-			user: {},
-			isAdmin: false,
-			errorMessage: null,
-			trainingPlans: {},
-			isTrainingPlansLoading: false,
-			currentTrainingPlan: {},
-			action: ""
-		},
+		store: { ...initialState },
 		actions: {
 			resetState: () => {
-				return setStore({
-					message: null,
-					isLogin: false,
-					user: {},
-					isAdmin: false,
-					errorMessage: null,
-					trainingPlans: {},
-					isTrainingPlansLoading: false
-				})
+				return setStore({ ...initialState })
 			},
 			login: async (formdata, navigate) => {
 				setStore({ errorMessage: null, })
@@ -42,20 +39,25 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 				localStorage.setItem("token", data.access_token);
 				localStorage.setItem("user", JSON.stringify(data.results))
-				setStore({ isLogin: true, isAdmin: data?.results?.is_admin, user: data?.results, message: data.message })
+				setStore({
+					isLogin: true,
+					isAdmin: data?.results?.is_admin,
+					user: data?.results,
+					message: data.message
+				})
 				navigate('/dashboard')
 			},
 			logout: () => {
 				localStorage.removeItem("token");
 				localStorage.removeItem("user");
-				setStore({ isLogin: false, isAdmin: false, user: {}, message: "null", errorMessage: null, });
+				setStore({ isLogin: false, isAdmin: false, user: {}, message: null, errorMessage: null, });
 			},
 			isLogin: () => {
 				const authToken = localStorage.getItem("token")
 				const user = localStorage.getItem("user")
 
 				if (Boolean(authToken) && Boolean(user)) {
-					setStore({ isLogin: true, })
+					setStore({ ...getStore(), isLogin: true, })
 					return getActions().getTrainingPlans();
 				}
 
@@ -82,10 +84,16 @@ const getState = ({ getStore, getActions, setStore }) => {
 				navigate('/dashboard')
 			},
 			setAction: (action) => {
-				setStore({ ...getStore(), action })
+				setStore({
+					...getStore(),
+					trainingPlansStates: {
+						...getStore().trainingPlansStates,
+						action
+					}
+				})
 			},
 			getCurrentTrainingPlan: (plan) => {
-				setStore({ ...getStore(), currentTrainingPlan: plan })
+				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, currentTrainingPlan: plan } })
 			},
 			crudTrainingPlans: async ({ formData, navigate, currentPlanId, action }) => {
 				const method = {
@@ -109,13 +117,19 @@ const getState = ({ getStore, getActions, setStore }) => {
 					setStore({ errorMessage: data.message, message: data.message, })
 					return alert(data.message)
 				}
-				console.log("data adentro de crudTr", data)
-				setStore({ ...getStore(), message: data.message })
+				setStore({
+					...getStore(),
+					message: data.message,
+					trainingPlansStates: {
+						...getStore().trainingPlansStates,
+						filter: ""
+					}
+				})
 				navigate("/training-plan")
-
 				return response
 			},
 			getTrainingPlans: async () => {
+
 				const uri = `${process.env.BACKEND_URL}/api/training-plans`
 				const authToken = localStorage.getItem("token")
 				const options = {
@@ -125,20 +139,28 @@ const getState = ({ getStore, getActions, setStore }) => {
 						Authorization: ` Bearer ${authToken}`
 					}
 				}
-				setStore({ ...getStore(), isTrainingPlansLoading: true })
+				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: true } })
 				const response = await fetch(uri, options)
 				const trainingPlans = await response.json()
 				if (!response.ok) {
-					setStore({ ...getStore(), isTrainingPlansLoading: false })
+					setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: false } })
 					return
 				}
 
 				setStore({
 					...getStore(),
-					trainingPlans,
-					isTrainingPlansLoading: false
+					trainingPlansStates: {
+						...getStore().trainingPlansStates,
+						trainingPlansCount: trainingPlans.results.length,
+						trainingPlans: trainingPlans.results,
+						isTrainingPlansLoading: false
+					}
 				})
-			}
+			},
+			setTrainingPlansFilters: (filter) => {
+				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, filter: filter } })
+
+			},
 		}
 	};
 };

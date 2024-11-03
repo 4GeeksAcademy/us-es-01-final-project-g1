@@ -1,15 +1,18 @@
-import React, { Children, useContext, useEffect } from "react"
-import { Context } from '../../store/appContext.js'
-import { Link } from 'react-router-dom'
-import { MdEdit } from "react-icons/md";
-import { FaRegTrashCan } from "react-icons/fa6";
-import { useNavigate } from 'react-router-dom'
+import React, { Children, useContext, useEffect, useState } from "react"
 import Swal from 'sweetalert2';
+import { FaRegTrashCan } from "react-icons/fa6";
+import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { MdEdit } from "react-icons/md";
+import { Context } from '../../store/appContext.js'
+import "../../../styles/trainingPlans.css"
 
 
 export const TrainingPlans = () => {
   const { store, actions } = useContext(Context)
-  const { trainingPlans, isTrainingPlansLoading } = store
+  const { trainingPlansStates } = store
+  const { trainingPlans, isTrainingPlansLoading, filter } = trainingPlansStates
+  const [filteredPlans, setFilteredPlans] = useState(() => trainingPlans)
   const navigate = useNavigate()
 
   const crud = (plan, action) => {
@@ -28,7 +31,7 @@ export const TrainingPlans = () => {
       confirmButtonText: "Yes, delete it!"
     }).then((result) => {
       if (result.isConfirmed) {
-        actions.crudTrainingPlans({ formData: plan, navigate, currentPlanId: store.currentTrainingPlan.id, action: "delete" })
+        actions.crudTrainingPlans({ formData: plan, navigate, currentPlanId: store.trainingPlansState.currentTrainingPlan.id, action: "delete" })
         Swal.fire({
           title: "Deleted!",
           text: "Your Training Plan has been deleted.",
@@ -38,12 +41,30 @@ export const TrainingPlans = () => {
     });
   }
 
+  const handleFilter = () => {
+    if (filter === "begginer") {
+      return setFilteredPlans(trainingPlans.filter((tp) => tp.level === "begginer"))
+    }
+
+    if (filter === "intermediate") {
+      return setFilteredPlans(trainingPlans.filter((tp) => tp.level === "intermediate"
+      ))
+    }
+
+    if (filter === "advanced") {
+      return setFilteredPlans(trainingPlans.filter((tp) => tp.level === "advanced"
+      ))
+    }
+    return setFilteredPlans(trainingPlans)
+  }
+
   useEffect(() => {
+    handleFilter()
     const getTP = async () => {
       actions.getTrainingPlans()
     }
     getTP()
-  }, []);
+  }, [filter]);
 
   if (isTrainingPlansLoading) {
     return (
@@ -55,10 +76,26 @@ export const TrainingPlans = () => {
 
   return (
     <div className={"container mt-2"}>
-      <div className={"mx-0 my-3 float-end"}>
-        <Link to={"/create-plan"} className={"btn btn-primary"} onClick={() => actions.setAction("create")}>
-          Crear Plan de Entrenamiento
-        </Link>
+      <div className="trainingPlans-header-container">
+        <div className="trainingPlans-header-filters">
+          <button className={"btn btn-secondary"} onClick={() => actions.setTrainingPlansFilters("begginer") }>
+            Basico
+          </button>
+          <button className={"btn btn-secondary"} onClick={() => actions.setTrainingPlansFilters("intermediate") }>
+            Intermedio
+          </button>
+          <button className={"btn btn-secondary"} onClick={() => actions.setTrainingPlansFilters("advanced") }>
+            Avanzado
+          </button>
+          <button className={"btn btn-danger"} onClick={() => actions.setTrainingPlansFilters("") }>
+            Limpiar filtros
+          </button>
+        </div>
+        <div className={""}>
+          <Link to={"/create-plan"} className={"btn btn-primary"}>
+            Crear Plan de Entrenamiento
+          </Link>
+        </div>
       </div>
       <table className="table table-dark table-striped">
         <thead>
@@ -72,7 +109,7 @@ export const TrainingPlans = () => {
           </tr>
         </thead>
         <tbody>
-          {Children.toArray(trainingPlans?.results?.map((trainingPlan) => {
+          {trainingPlans && Children.toArray((Boolean(filter) ? filteredPlans : trainingPlans)?.map((trainingPlan) => {
             return (
               <tr>
                 <td>{trainingPlan?.name}</td>
@@ -93,7 +130,7 @@ export const TrainingPlans = () => {
               </tr>
             )
           }))}
-          
+
         </tbody>
       </table>
     </div>
