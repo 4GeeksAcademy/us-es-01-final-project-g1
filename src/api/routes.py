@@ -176,7 +176,11 @@ def exercises():
         return response_body, 200
     if request.method == 'POST':
         data = request.json
-        row = Exercises(name=data.get('name'))
+        row = Exercises(name=data.get('name'),
+                        description=data.get('description'),
+                        muscle=data.get('muscle'),
+                        exercise_base=data.get('exercise_base'),
+                        )
         db.session.add(row)
         db.session.commit()
         response_body['message'] = 'Ejercicio creado exitosamente'
@@ -283,6 +287,5 @@ def initial_setup():
 
     response_body["message"] = "Setup Ok"    
     return response_body, 200 
-
 
 

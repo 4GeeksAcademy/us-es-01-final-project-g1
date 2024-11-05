@@ -29,7 +29,7 @@ export const CreateSessions = () => {
   }
 
   return (
-    <FormLayout title={"Create your Session"} onSubmit={createPlan} actionText={"Create Plan"}>
+    <FormLayout title={"Create your Session"} onSubmit={createPlan} actionText={"Create Session"}>
       <Input label="Date" id="date" value={date} onChange={(e) => setDate(e.target.value)} type={"date"} />
       <div className='mb-3'>
         <label htmlFor={"level"} className='form-label'>

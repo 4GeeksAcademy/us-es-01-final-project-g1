@@ -49,15 +49,16 @@ export const Dashboard = () => {
             ) : (<CreateCard model={"training_plans"} />)}
           </div>
           <div className='col col-sm-12 col-md-6 col-lg-6'>
-            {(false) ? <Loader /> : store?.sessionsStates?.sessions?.length ? (
+            {store.sessionsStates.isSessionsLoading ? <Loader /> : store?.sessionsStates?.sessions?.length ? (
               <CardInfo title={"Sesions"} subtitle={"Best Sessions bound to the training plan"} description={"some description"} model={"sessions"} setupItems={{}} />
             ) : (<CreateCard model={"sessions"} />)}
           </div>
         </div>
         <div className="row">
-          <div className='col col-sm-12 col-md-6 col-lg-6'>
-            {/* <CardInfo title={"titulo modelo3"} subtitle={"algun mensaje motivador3"} description={"algun mensaje"} /> */}
-            <CreateCard />
+        <div className='col col-sm-12 col-md-6 col-lg-6'>
+            {store.exercisesStates.isExercisesLoading ? <Loader /> : store?.exercisesStates?.exercises?.length ? (
+              <CardInfo title={"Exercises"} subtitle={"Powerful exercises for your training and you!"} description={"awesome exercises"} model={"exercises"} setupItems={{}} />
+            ) : (<CreateCard model={"sessions"} />)}
           </div>
           <div className='col col-sm-12 col-md-6 col-lg-6'>
             {/* <CardInfo title={"titulo modelo3"} subtitle={"algun mensaje motivador4"} description={"algun mensaje"} /> */}

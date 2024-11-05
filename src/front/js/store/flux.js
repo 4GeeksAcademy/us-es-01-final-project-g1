@@ -12,10 +12,12 @@ const initialState = {
 		action: ""
 	},
 	sessionsStates: {
-		isSessionStatesIsLoading: false,
+		isSessionsLoading: false,
 		sessions: [],
-		filter: "",
-		action: ""
+	},
+	exercisesStates: {
+		isExercisesLoading: false,
+		exercises: []
 	}
 }
 
@@ -69,6 +71,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					setStore({ ...getStore(), isLogin: true, })
 					getActions().getTrainingPlans();
 					getActions().getSessions();
+					getActions().getExercises();
 				}
 
 			},
@@ -178,7 +181,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 			setTrainingPlansFilters: (filter) => {
 				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, filter: filter } })
 			},
-			//sessionAlgo
+			//Sessions
 			getSessions: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/sessions`
 				const authToken = localStorage.getItem("token")
@@ -189,11 +192,11 @@ const getState = ({ getStore, getActions, setStore }) => {
 						Authorization: ` Bearer ${authToken}`
 					}
 				}
-				setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionStatesIsLoading: true } })
+				setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: true } })
 				const response = await fetch(uri, options)
 				const sessions = await response.json()
 				if (!response.ok) {
-					setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionStatesIsLoading: false } })
+					setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: false } })
 					return
 				}
 				setStore({
@@ -201,7 +204,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					sessionsStates: {
 						...getStore().sessionsStates,
 						sessions: sessions.results,
-						isSessionStatesIsLoading: false
+						isSessionsLoading: false
 					}
 				})
 
@@ -233,6 +236,89 @@ const getState = ({ getStore, getActions, setStore }) => {
 				})
 				navigate("/sessions")
 				return response
+			},
+			//Exercises
+			getExercises: async () => {
+				const uri = `${process.env.BACKEND_URL}/api/exercises`
+				const authToken = localStorage.getItem("token")
+				const options = {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: ` Bearer ${authToken}`
+					}
+				}
+				setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: true } })
+				const response = await fetch(uri, options)
+				const exercises = await response.json()
+				if (!response.ok) {
+					setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: false } })
+					return
+				}
+				setStore({
+					...getStore(),
+					exercisesStates: {
+						...getStore().exercisesStates,
+						exercises: exercises.results,
+						isExercisesLoading: false
+					}
+				})
+
+			},
+			createExercises: async ({ formData, navigate, }) => {
+				const uri = `${process.env.BACKEND_URL}/api/exercises`
+				const authToken = localStorage.getItem("token")
+				const options = {
+					method: "POST",
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: ` Bearer ${authToken}`
+					},
+					body: JSON.stringify(formData),
+				}
+				const response = await fetch(uri, options)
+				const data = await response.json()
+				if (!response.ok) {
+					setStore({ errorMessage: data.message, message: data.message, })
+				}
+
+				setStore({
+					...getStore(),
+					message: data.message,
+					exercisesStates: {
+						...getStore().exercisesStates,
+					}
+				})
+				navigate("/exercises")
+				return response
+			},
+			getInitial: async () => {
+				const uri = `${process.env.BACKEND_URL}/api/initial-setup`
+				const authToken = localStorage.getItem("token")
+				const options = {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: ` Bearer ${authToken}`
+					}
+				}
+				setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: true } })
+				const response = await fetch(uri, options)
+				const test = await response.json()
+				console.log("test", test)
+				// if (!response.ok) {
+				// 	setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: false } })
+				// 	return
+				// }
+				// setStore({
+				// 	...getStore(),
+				// 	exercisesStates: {
+				// 		...getStore().exercisesStates,
+				// 		exercises: exercises.results,
+				// 		isExercisesLoading: false
+				// 	}
+				// })
+
 			},
 		}
 	};
