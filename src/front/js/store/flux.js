@@ -11,6 +11,12 @@ const initialState = {
 		filter: "",
 		action: ""
 	},
+	sessionsStates: {
+		isSessionStatesIsLoading: false,
+		sessions: [],
+		filter: "",
+		action: ""
+	}
 }
 
 const getState = ({ getStore, getActions, setStore }) => {
@@ -83,6 +89,43 @@ const getState = ({ getStore, getActions, setStore }) => {
 				setStore({ isLogin: true, isAdmin: data.results.is_admin, user: data.results, message: data.message })
 				navigate('/dashboard')
 			},
+			// trainingPlans
+			getTrainingPlans: async () => {
+				const uri = `${process.env.BACKEND_URL}/api/training-plans`
+				const authToken = localStorage.getItem("token")
+				const options = {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: ` Bearer ${authToken}`
+					}
+				}
+				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: true } })
+				const response = await fetch(uri, options)
+				const trainingPlans = await response.json()
+				if (!response.ok) {
+					setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: false } })
+					return
+				}
+				setStore({
+					...getStore(),
+					trainingPlansStates: {
+						...getStore().trainingPlansStates,
+						trainingPlansCount: trainingPlans.results.length,
+						trainingPlans: trainingPlans.results,
+						isTrainingPlansLoading: false
+					}
+				})
+			},
+			getCurrentTrainingPlan: (plan) => {
+				setStore({
+					...getStore(),
+					trainingPlansStates: {
+						...getStore().trainingPlansStates,
+						currentTrainingPlan: plan
+					}
+				})
+			},
 			setAction: (action) => {
 				setStore({
 					...getStore(),
@@ -91,9 +134,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 						action
 					}
 				})
-			},
-			getCurrentTrainingPlan: (plan) => {
-				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, currentTrainingPlan: plan } })
 			},
 			crudTrainingPlans: async ({ formData, navigate, currentPlanId, action }) => {
 				const method = {
@@ -115,8 +155,11 @@ const getState = ({ getStore, getActions, setStore }) => {
 				const data = await response.json()
 				if (!response.ok) {
 					setStore({ errorMessage: data.message, message: data.message, })
-					return alert(data.message)
 				}
+				if (action === "delete") {
+					getActions().getTrainingPlans()
+				}
+
 				setStore({
 					...getStore(),
 					message: data.message,
@@ -128,9 +171,12 @@ const getState = ({ getStore, getActions, setStore }) => {
 				navigate("/training-plan")
 				return response
 			},
-			getTrainingPlans: async () => {
-
-				const uri = `${process.env.BACKEND_URL}/api/training-plans`
+			setTrainingPlansFilters: (filter) => {
+				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, filter: filter } })
+			},
+			//sessionAlgo
+			getSessions: async () => {
+				const uri = `${process.env.BACKEND_URL}/api/sessions`
 				const authToken = localStorage.getItem("token")
 				const options = {
 					method: 'GET',
@@ -139,27 +185,50 @@ const getState = ({ getStore, getActions, setStore }) => {
 						Authorization: ` Bearer ${authToken}`
 					}
 				}
-				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: true } })
+				setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionStatesIsLoading: true } })
 				const response = await fetch(uri, options)
-				const trainingPlans = await response.json()
+				const sessions = await response.json()
 				if (!response.ok) {
-					setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: false } })
+					setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionStatesIsLoading: false } })
 					return
 				}
+				setStore({
+					...getStore(),
+					sessionsStates: {
+						...getStore().sessionsStates,
+						sessions: sessions.results,
+						isSessionStatesIsLoading: false
+					}
+				})
+
+			},
+			createSessions: async ({ formData, navigate,   }) => {
+				const uri = `${process.env.BACKEND_URL}/api/sessions`
+				const authToken = localStorage.getItem("token")
+				const options = {
+					method: "POST",
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: ` Bearer ${authToken}`
+					},
+					body: JSON.stringify(formData),
+				}
+				const response = await fetch(uri, options)
+				const data = await response.json()
+				if (!response.ok) {
+					setStore({ errorMessage: data.message, message: data.message, })
+				}
+
 
 				setStore({
 					...getStore(),
-					trainingPlansStates: {
-						...getStore().trainingPlansStates,
-						trainingPlansCount: trainingPlans.results.length,
-						trainingPlans: trainingPlans.results,
-						isTrainingPlansLoading: false
+					message: data.message,
+					sessionsStates: {
+						...getStore().sessionsStates,
 					}
 				})
-			},
-			setTrainingPlansFilters: (filter) => {
-				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, filter: filter } })
-
+				navigate("/sessions")
+				return response
 			},
 		}
 	};

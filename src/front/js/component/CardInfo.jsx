@@ -35,19 +35,22 @@ export const CardInfo = ({ title, subtitle, description, durationTime, model, se
             <a href='#'>{mapModels[model]}</a>
           </li>
           <li className='date'>Actualizado, Dec. 24, 2024</li>
-          <li className='tags'>
-            <ul>
-              <li>
-                <Link to={mapRoutesModels[model]} onClick={(e) => items?.item_1.onClick(e)}>Beginners</Link>
-              </li>
-              <li>
-                <Link to={mapRoutesModels[model]} onClick={(e) => items?.item_2.onClick(e)}>Medium</Link>
-              </li>
-              <li>
-                <Link to={mapRoutesModels[model]} onClick={(e) => items?.item_3.onClick(e)}>Expert</Link>
-              </li>
-            </ul>
-          </li>
+          {model === "sessions" ? null : (
+            <li className='tags'>
+              <ul>
+                <li>
+                  <Link to={mapRoutesModels[model]} onClick={(e) => items?.item_1.onClick(e)}>Beginners</Link>
+                </li>
+                <li>
+                  <Link to={mapRoutesModels[model]} onClick={(e) => items?.item_2.onClick(e)}>Medium</Link>
+                </li>
+                <li>
+                  <Link to={mapRoutesModels[model]} onClick={(e) => items?.item_3.onClick(e)}>Expert</Link>
+                </li>
+              </ul>
+            </li>
+          )}
+
         </ul>
       </div>
       <div className='description'>

@@ -13,6 +13,8 @@ import { Navbar } from "./component/Navbar.jsx";
 import { CreatePlanForm } from "./pages/trainingPlans/CreatePlanForm.jsx";
 import { UpdatePlanForm } from "./pages/trainingPlans/UpdatePlanForm.jsx";
 import { TrainingPlans } from "./pages/trainingPlans/TrainingPlans.jsx";
+import { CreateSessions } from "./pages/sessions/CreateSessions.jsx";
+import { Sessions } from "./pages/sessions/Sessions.jsx";
 
 
 // Create your first component
@@ -33,6 +35,8 @@ const Layout = () => {
                 <Route element={<CreatePlanForm />} path="/create-plan" />
                 <Route element={<UpdatePlanForm />} path="/update-plan" />
                 <Route element={<TrainingPlans />} path="/training-plan" />
+                <Route element={<Sessions />} path="/sessions" />
+                <Route element={<CreateSessions />} path="/create-sessions" />
                 <Route element={<h1>Not found!</h1>} path="*" />
             </Routes>
         </BrowserRouter>

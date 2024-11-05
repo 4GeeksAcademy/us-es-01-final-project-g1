@@ -71,7 +71,7 @@ def training_plans():
     response_body = {}
     current_user = get_jwt_identity()
     if request.method == 'GET':
-        rows = db.session.execute(db.select(TrainingPlans).where(TrainingPlans.user_id == current_user['user_id'])).scalars()
+        rows = db.session.execute(db.select(TrainingPlans).where(TrainingPlans.user_id == current_user['user_id'], TrainingPlans.is_active == True)).scalars()
         result = [row.serialize() for row in rows]    
         response_body['message'] = 'Listado de Planes de Entrenamiento'
         response_body['results'] = result
