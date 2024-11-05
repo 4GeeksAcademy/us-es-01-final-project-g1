@@ -7,10 +7,12 @@ import { MdEdit } from "react-icons/md";
 import { Context } from '../../store/appContext.js'
 import "../../../styles/trainingPlans.css"
 import { BannerMessage } from "../../component/BannerMessage.jsx";
+import { formatDate } from "../../helper/formatDate.js";
+
 
 export const TrainingPlans = () => {
   const { store, actions } = useContext(Context)
-  
+
   const { trainingPlansStates } = store
   const { trainingPlans, isTrainingPlansLoading, filter, currentTrainingPlan } = trainingPlansStates
 
@@ -81,10 +83,10 @@ export const TrainingPlans = () => {
       </div>
     )
   }
-// evaluation, message, variant="warning"
+  // evaluation, message, variant="warning"
   return (
     <div className={"container mt-2"}>
-      <BannerMessage variant={"info"} message={"Crea tu Session eligiendo un plan de entrenamiento"} evaluation={true}/>
+      <BannerMessage variant={"info"} message={"Crea tu Session eligiendo un plan de entrenamiento"} evaluation={true} />
       <div className="trainingPlans-header-container">
         <div className="trainingPlans-header-filters">
           <button className={"btn btn-secondary"} onClick={() => actions.setTrainingPlansFilters("begginer")}>
@@ -122,8 +124,8 @@ export const TrainingPlans = () => {
             return (
               <tr>
                 <td>{trainingPlan?.name}</td>
-                <td>{trainingPlan?.registration_date}</td>
-                <td>{trainingPlan?.finalization_date}</td>
+                <td>{formatDate(trainingPlan?.registration_date)}</td>
+                <td>{formatDate(trainingPlan?.finalization_date)}</td>
                 <td>{trainingPlan?.quantity_session}</td>
                 <td>{trainingPlan?.level}</td>
                 <td>

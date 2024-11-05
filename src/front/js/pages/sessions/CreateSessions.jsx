@@ -8,7 +8,7 @@ import { Context } from '../../store/appContext.js'
 
 export const CreateSessions = () => {
   const { actions, store } = useContext(Context)
-  console.log("store", store.user.id)
+  const userFromLocalStorage = JSON.parse(localStorage.getItem("user"))
   const _trainingPlans = store?.trainingPlansStates?.trainingPlans?.map((plan) => ({
     label: plan.name,
     value: plan.id
@@ -19,12 +19,11 @@ export const CreateSessions = () => {
   const [trainingPlan, setTrainingPlan] = useState("")
   const navigate = useNavigate()
   const createPlan = (e) => {
-    console.log("trainingPlan", trainingPlan)
     e.preventDefault()
     const formData = {
       date,
       training_plan_id: trainingPlan,
-      user_id: store.user.id
+      user_id: store.user.id ?? userFromLocalStorage.id
     }
     actions.createSessions({ formData, navigate })
   }

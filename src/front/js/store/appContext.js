@@ -30,7 +30,7 @@ const injectContext = PassedComponent => {
 		  store, instead use actions, like this:
 		*/
 		useEffect(() => {
-			console.log("MONTE MI CONTEXTO", state)
+			state.actions.checkMount()
 		}, []);
 
 		// The initial value for the context is not null anymore, but the current state of this component,

@@ -23,6 +23,9 @@ const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: { ...initialState },
 		actions: {
+			checkMount: ()=>{
+				console.log("monte mi contexto, esto quiere decir que solo se montara una vez y no volvera a tener lectura en el dashboard")
+			},
 			resetState: () => {
 				return setStore({ ...initialState })
 			},
@@ -64,7 +67,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 				if (Boolean(authToken) && Boolean(user)) {
 					setStore({ ...getStore(), isLogin: true, })
-					return getActions().getTrainingPlans();
+					getActions().getTrainingPlans();
+					getActions().getSessions();
 				}
 
 			},
@@ -202,7 +206,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				})
 
 			},
-			createSessions: async ({ formData, navigate,   }) => {
+			createSessions: async ({ formData, navigate, }) => {
 				const uri = `${process.env.BACKEND_URL}/api/sessions`
 				const authToken = localStorage.getItem("token")
 				const options = {

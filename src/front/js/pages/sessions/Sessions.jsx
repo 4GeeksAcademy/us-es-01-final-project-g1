@@ -7,66 +7,20 @@ import { MdEdit } from "react-icons/md";
 import { Context } from '../../store/appContext.js'
 import "../../../styles/trainingPlans.css"
 import { BannerMessage } from "../../component/BannerMessage.jsx";
+import { formatDate } from "../../helper/formatDate.js";
+
 
 export const Sessions = () => {
   const { store, actions } = useContext(Context)
-  
-  const { sessionsStates } = store
-
-  // const [filteredPlans, setFilteredPlans] = useState(() => trainingPlans)
+  const { sessionsStates, trainingPlansStates } = store
   const navigate = useNavigate()
 
-  // const crud = (plan, action) => {
-  //   actions.getCurrentTrainingPlan(plan)
-  //   actions.setAction(action)
-  //   if (action === "edit") {
-  //     return navigate("/update-plan")
-  //   }
-  //   Swal.fire({
-  //     title: "Are you sure?",
-  //     text: "You won't be able to revert this!",
-  //     icon: "warning",
-  //     showCancelButton: true,
-  //     confirmButtonColor: "#ff5733",
-  //     cancelButtonColor: "#d3c7bb",
-  //     confirmButtonText: "Yes, delete it!"
-  //   }).then((result) => {
-  //     if (result.isConfirmed) {
-  //       actions.crudTrainingPlans({
-  //         formData: plan,
-  //         navigate,
-  //         currentPlanId: plan.id,
-  //         action: "delete"
-  //       })
-  //       Swal.fire({
-  //         title: "Deleted!",
-  //         text: "Your Training Plan has been deleted.",
-  //         icon: "success"
-  //       });
-  //     }
-  //   });
-  // }
-
-  // const handleFilter = () => {
-  //   if (filter === "begginer") {
-  //     return setFilteredPlans(trainingPlans.filter((tp) => tp.level === "begginer"))
-  //   }
-
-  //   if (filter === "intermediate") {
-  //     return setFilteredPlans(trainingPlans.filter((tp) => tp.level === "intermediate"
-  //     ))
-  //   }
-
-  //   if (filter === "advanced") {
-  //     return setFilteredPlans(trainingPlans.filter((tp) => tp.level === "advanced"
-  //     ))
-  //   }
-  //   return setFilteredPlans(trainingPlans)
-  // }
-
+  const findTPName = (id) => {
+    const plan = trainingPlansStates?.trainingPlans.find(t => t.id === id)
+    return plan?.name
+  }
 
   useEffect(() => {
-    // handleFilter()
     const getSessions = async () => {
       actions.getSessions()
     }
@@ -99,18 +53,15 @@ export const Sessions = () => {
           </tr>
         </thead>
         <tbody>
-          {/* {Children.toArray(sessionsStates.sessions.map((session)=>{
+          {Children.toArray(sessionsStates.sessions.map((session) => {
             return (
-                    <tr>
-                <td>{session.date}</td>
-                <td>{session.training_plan_id}</td>
-              </tr> 
+              <tr>
+                <td>{formatDate(session.date)}</td>
+                <td>{findTPName(session.training_plan_id)}</td>
+              </tr>
             )
-          }))} */}
-        <tr>
-          <td>{"date"}</td>
-          <td>{"tp"}</td>
-        </tr>
+          }))}
+
 
         </tbody>
       </table>

@@ -18,10 +18,10 @@ export const Dashboard = () => {
 
 
   useEffect(() => {
-    // if (!store.isLogin) {
-    //   console.log("AQUI DEBERIA NAVEGAR AL LOGIN Y NO LO HACE")
-    //   navigate("/")
-    // }
+    if (!store.isLogin) {
+      console.log("AQUI DEBERIA NAVEGAR AL LOGIN Y NO LO HACE")
+      navigate("/")
+    }
     actions.isLogin()
   }, [store.isLogin]);
 
