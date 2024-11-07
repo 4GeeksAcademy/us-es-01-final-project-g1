@@ -18,7 +18,14 @@ export const UpdatePlanForm = () => {
     const [finalizationDate, setFinalizationDate] = useState(store.trainingPlansStates.currentTrainingPlan.finalization_date) // definir formato de fechas
     const [quantitySession, setQuantitySession] = useState(store.trainingPlansStates.currentTrainingPlan.quantity_session)
     const [level, setLevel] = useState(levelOptions.find(option => option.value === store.trainingPlansStates.currentTrainingPlan.level)) // 'begginer', 'intermediate', 'advanced',
+    const [exercises, setExercises] = useState([])
     const navigate = useNavigate()
+
+    const exercisesCollection = store?.exercisesStates?.exercises?.map((exercises) => ({
+        label: exercises.name,
+        value: exercises.id
+    }))
+
 
     const onEdit = (e) => {
         e.preventDefault()
@@ -30,7 +37,13 @@ export const UpdatePlanForm = () => {
             level: level.value,
             is_active: store.trainingPlansStates.currentTrainingPlan.is_active
         }
-        return actions.crudTrainingPlans({ formData, navigate, currentPlanId: store.trainingPlansStates.currentTrainingPlan.id, action: trainingPlansStates.action })
+        return actions.crudTrainingPlans({ 
+            formData, 
+            navigate, 
+            currentPlanId: store.trainingPlansStates.currentTrainingPlan.id,
+            action: trainingPlansStates.action,
+            exercise_id: exercises
+         })
     }
 
     return (
@@ -39,6 +52,15 @@ export const UpdatePlanForm = () => {
             <Input label="Registration Date" id="registrationDate" value={formatDate(registrationDate)} onChange={(e) => setRegistrationDate(e.target.value)} type={"date"} />
             <Input label="Finalization Date" id="finalizationDate" value={formatDate(finalizationDate)} onChange={(e) => setFinalizationDate(e.target.value)} type={"date"} />
             <Input label="Quantity Sessions" id="quantitySesions" value={quantitySession} onChange={(e) => setQuantitySession(e.target.value)} type={"number"} />
+            {/* {store.trainingPlansStates.action === "edit" && (
+                            <div className='mb-3'>
+                            <label htmlFor={"Exercises"} className='form-label'>
+                                Ejercicios
+                            </label>
+                            <Select  options={exercisesCollection} onChange={(data) => setExercises(data.value)} />
+                        </div>
+            )} */}
+
             <div className='mb-3'>
                 <label htmlFor={"level"} className='form-label'>
                     Level

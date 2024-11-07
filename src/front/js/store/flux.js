@@ -125,6 +125,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				})
 			},
 			getCurrentTrainingPlan: (plan) => {
+				console.log("asd")
 				setStore({
 					...getStore(),
 					trainingPlansStates: {
@@ -142,7 +143,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					}
 				})
 			},
-			crudTrainingPlans: async ({ formData, navigate, currentPlanId, action }) => {
+			crudTrainingPlans: async ({ formData, navigate, currentPlanId, action, exercise_id }) => {
 				const method = {
 					create: "POST",
 					edit: "PUT",
@@ -165,6 +166,16 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 				if (action === "delete") {
 					getActions().getTrainingPlans()
+				}
+
+				if (action === "edit") {
+					const dataToTPE = {
+						training_plan_id: currentPlanId,
+						exercise_id,
+						repetitions : "3",
+						series: "3"
+					}
+					getActions().setTrainingPlanExercises(dataToTPE)
 				}
 
 				setStore({
@@ -237,6 +248,23 @@ const getState = ({ getStore, getActions, setStore }) => {
 				navigate("/sessions")
 				return response
 			},
+			setTrainingPlanExercises: async (formData) => {
+				
+				const uri = `${process.env.BACKEND_URL}/api/training-exercises`
+				const authToken = localStorage.getItem("token")
+				const options = {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: ` Bearer ${authToken}`
+					},
+					body: JSON.stringify(formData),
+				}
+				const response = await fetch(uri, options)
+				const data = await response.json()
+				console.log("data adentro del setTPE", data)
+				return response
+			},
 			//Exercises
 			getTrainingPlanExercises: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/training-exercises`
@@ -261,6 +289,16 @@ const getState = ({ getStore, getActions, setStore }) => {
 						...getStore().exercisesStates,
 						trainingPlanExercises: exercises.results,
 						// isExercisesLoading: false
+					}
+				})
+
+			},
+			setLinkedTPE: (tpe) => {
+				setStore({
+					...getStore(),
+					exercisesStates: {
+						...getStore().exercisesStates,
+						linkedTPE: tpe
 					}
 				})
 
