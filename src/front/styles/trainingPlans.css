@@ -8,3 +8,33 @@
   display: flex;
   gap: 1rem;
 }
+
+.innerTableForm-initialMessage {
+  margin: 1rem 0.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--primary);
+  box-shadow: 0 0 8px 0 var(--primary);
+  display: flex;
+  align-items: center;
+  place-content: center;
+  cursor: pointer;
+}
+
+.innerTableForm-initialMessage:hover {
+  color: var(--primary)
+}
+
+.innerTableForm-container {
+  margin: 0.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--primary);
+  box-shadow: 0 0 8px 0 var(--primary);
+  min-width: 250px;
+  transition: all 0.2s ease;
+}
+
+.innerTableForm-label {
+  color: var(--light)
+}

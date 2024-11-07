@@ -13,7 +13,6 @@ import { Navbar } from "./component/Navbar.jsx";
 import { CreatePlanForm } from "./pages/trainingPlans/CreatePlanForm.jsx";
 import { UpdatePlanForm } from "./pages/trainingPlans/UpdatePlanForm.jsx";
 import { TrainingPlans } from "./pages/trainingPlans/TrainingPlans.jsx";
-import { TrainingExercises } from "./pages/trainingPlans/TrainingExercises.jsx";
 import { CreateSessions } from "./pages/sessions/CreateSessions.jsx";
 import { Sessions } from "./pages/sessions/Sessions.jsx";
 import { Exercises } from "./pages/exercises/Exercises.jsx";
@@ -40,7 +39,6 @@ const Layout = () => {
                 <Route element={<Sessions />} path="/sessions" />
                 <Route element={<CreateSessions />} path="/create-sessions" />
                 <Route element={<Exercises />} path="/exercises" />
-                <Route element={<TrainingExercises />} path="/update-training-exercises" />
                 <Route element={<h1>Not found!</h1>} path="*" />
             </Routes>
         </BrowserRouter>

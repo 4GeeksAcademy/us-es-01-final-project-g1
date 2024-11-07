@@ -9,10 +9,11 @@ import '../../../styles/trainingPlans.css';
 import { BannerMessage } from '../../component/BannerMessage.jsx';
 import { formatDate } from '../../helper/formatDate.js';
 import Select from 'react-select';
+import { AddTrainingExercises, TrainingExercises } from './TrainingExercises.jsx';
 
 export const TrainingPlans = () => {
   const [linInitialExercise, setLinInitialExercise] = useState("");
-  const [exercises, setExercises] = useState('');
+  const [showForm, setShowForm] = useState(true);
 
   const { store, actions } = useContext(Context);
   const { trainingPlansStates } = store;
@@ -20,10 +21,6 @@ export const TrainingPlans = () => {
   const [filteredPlans, setFilteredPlans] = useState(() => trainingPlans);
   const navigate = useNavigate();
 
-  const exercisesCollection = store?.exercisesStates?.exercises?.map((exercises) => ({
-    label: exercises.name,
-    value: exercises.id
-  }));
 
   const crud = (plan, action) => {
     actions.getCurrentTrainingPlan(plan);
@@ -75,12 +72,10 @@ export const TrainingPlans = () => {
 
   const linkInitialExercise = (id) => {
     setLinInitialExercise(id);
+    setShowForm(true)
   };
 
-  const navigateTPE = (plan, ejerciciosAsociados) => {
-    actions.getCurrentTrainingPlan(plan);
-    actions.setLinkedTPE(ejerciciosAsociados);
-  }
+
 
   useEffect(() => {
     handleFilter();
@@ -121,7 +116,7 @@ export const TrainingPlans = () => {
           </button>
         </div>
         <div className={''}>
-          <Link to={'/create-plan'} className={'btn btn-primary'}>
+          <Link to={'/create-plan'} className={'btn btn-warning'}>
             Crear Plan de Entrenamiento
           </Link>
         </div>
@@ -142,7 +137,7 @@ export const TrainingPlans = () => {
           {trainingPlans &&
             Children.toArray(
               (Boolean(filter) ? filteredPlans : trainingPlans)?.map((trainingPlan) => {
-                const ejerciciosAsociados = store?.exercisesStates?.trainingPlanExercises?.filter(
+                const linkedExercises = store?.exercisesStates?.trainingPlanExercises?.filter(
                   (exercise) => exercise?.training_plan_id === trainingPlan?.id
                 );
                 return (
@@ -153,46 +148,8 @@ export const TrainingPlans = () => {
                     <td>{trainingPlan?.quantity_session}</td>
                     <td>{trainingPlan?.level}</td>
                     <td>
-                      {ejerciciosAsociados?.length > 0 ? (
-                        <>
-                          <Link onClick={()=>navigateTPE(trainingPlan,ejerciciosAsociados)} to={"/update-training-exercises"} className={"btn btn-primary"} >actualizar</Link>
-                          <ul>
-                            {ejerciciosAsociados?.map((exercise, index) => (
-                              <li key={index}>
-                                {exercise?.name} - Series: {exercise?.series}, Repeticiones: {exercise?.repetitions}
-                              </li>
-                            ))}
-                          </ul>
-                        </>
-                      ) : (
-                        <span onClick={() => linkInitialExercise(trainingPlan.id)}>agrega tu primer ejercicios</span>
-                      )}
-                      {linInitialExercise === trainingPlan.id ? (
-                        <div className={'innerTableForm'}>
-                          <div className='mb-3 table-light'>
-                            <label htmlFor={'Exercises'} className='form-label innerTableForm-label'>
-                              Ejercicios
-                            </label>
-                            <Select options={exercisesCollection} onChange={(data) => setExercises(data.value)} />
-                          </div>
-                          {Boolean(exercises) && linInitialExercise === trainingPlan.id ? (
-                            <>
-                              <div className='mb-3 table-light'>
-                                <label htmlFor={'Exercises'} className='form-label innerTableForm-label'>
-                                  Repeticiones
-                                </label>
-                                <Select options={exercisesCollection} onChange={(data) => setExercises(data.value)} />
-                              </div>
-                              <div className='mb-3 table-light'>
-                                <label htmlFor={'Exercises'} className='form-label innerTableForm-label'>
-                                  Series
-                                </label>
-                                <Select options={exercisesCollection} onChange={(data) => setExercises(data.value)} />
-                              </div>
-                            </>
-                          ) : null}
-                        </div>
-                      ) : null}
+                      <AddTrainingExercises linkedExercises={linkedExercises} onClick={() => linkInitialExercise(trainingPlan.id)} />
+                      <TrainingExercises showForm={showForm} setShowForm={setShowForm} linInitialExercise={linInitialExercise} tpId={trainingPlan.id} />
                     </td>
                     <td>
                       <div className='d-flex gap-2'>

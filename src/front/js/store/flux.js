@@ -143,7 +143,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					}
 				})
 			},
-			crudTrainingPlans: async ({ formData, navigate, currentPlanId, action, exercise_id }) => {
+			crudTrainingPlans: async ({ formData, navigate, currentPlanId, action }) => {
 				const method = {
 					create: "POST",
 					edit: "PUT",
@@ -168,15 +168,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 					getActions().getTrainingPlans()
 				}
 
-				if (action === "edit") {
-					const dataToTPE = {
-						training_plan_id: currentPlanId,
-						exercise_id,
-						repetitions : "3",
-						series: "3"
-					}
-					getActions().setTrainingPlanExercises(dataToTPE)
-				}
 
 				setStore({
 					...getStore(),
@@ -248,7 +239,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				navigate("/sessions")
 				return response
 			},
-			setTrainingPlanExercises: async (formData) => {
+			setTrainingPlanExercises: async (formData, navigate) => {
 				
 				const uri = `${process.env.BACKEND_URL}/api/training-exercises`
 				const authToken = localStorage.getItem("token")
@@ -262,6 +253,22 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 				const response = await fetch(uri, options)
 				const data = await response.json()
+				
+				if (!response.ok) {
+				return	setStore({ errorMessage: data.message, message: data.message, })
+				}
+				setStore({
+					...getStore(),
+					message: data.message,
+					exercisesStates: {
+						...getStore().exercisesStates,
+						trainingPlanExercises: [
+							...getStore().exercisesStates.trainingPlanExercises,
+							data.results
+						]
+					}
+				})
+				navigate("/training-plan")
 				console.log("data adentro del setTPE", data)
 				return response
 			},
