@@ -63,6 +63,7 @@ class TrainingPlans(db.Model):
     registration_date = db.Column(db.DateTime(), default=datetime.now, nullable=False)
     finalization_date = db.Column(db.DateTime(), nullable=False)
     quantity_session = db.Column(db.Integer, nullable=False)
+    # exercises = db.Column(db.String(80), db.ForeignKey("exercises.name"), unique=False, nullable=False)
     is_active = db.Column(db.Boolean, unique=False, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     user_to = db.relationship('Users', foreign_keys=[user_id], backref=db.backref('training_plans', lazy='select'))
@@ -78,6 +79,7 @@ class TrainingPlans(db.Model):
                 'registration_date': self.registration_date,
                 'finalization_date': self.finalization_date,
                 'quantity_session': self.quantity_session,
+                # 'exercises': self.exercises,
                 'is_active': self.is_active,
                 'user_id': self.user_id}
 

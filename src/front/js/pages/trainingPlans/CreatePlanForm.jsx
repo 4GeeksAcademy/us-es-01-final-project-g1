@@ -1,4 +1,4 @@
-import React, { useContext, useState, } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import Select from 'react-select'
 import { useNavigate } from 'react-router-dom'
 import { FormLayout } from '../../component/FormLayout.jsx'
@@ -15,20 +15,36 @@ export const CreatePlanForm = () => {
     const [registrationDate, setRegistrationDate] = useState("") // definir formato de fechas
     const [finalizationDate, setFinalizationDate] = useState("") // definir formato de fechas
     const [quantitySession, setQuantitySession] = useState("")
+    const [exercises, setExercises] = useState("")
     const [level, setLevel] = useState("begginer") // 'begginer', 'intermediate', 'advanced',
-    const navigate = useNavigate()
+    const navigate = useNavigate("")
+
+    const _exercises = store?.exercisesStates?.exercises?.map((exercises) => ({
+        label: exercises.name,
+        value: exercises.id
+    }))
+
+    console.log("estados de los ejercicios", store?.exercisesStates)
+    console.log("el id del ejercicios", exercises)
+
+
 
     const createPlan = (e) => {
         e.preventDefault()
         const formData = {
-            name,
+            name: name,
             registration_date: registrationDate,
             finalization_date: finalizationDate,
             quantity_session: quantitySession,
+            exercises: exercises,
             level: level
         }
         actions.crudTrainingPlans({ formData, navigate, action: "create" })
     }
+
+    useEffect(() => {
+        actions.getTrainingPlanExercises()
+    }, [])
 
     return (
         <FormLayout title={"Create your Exercise Plan"} onSubmit={createPlan} actionText={"Create Plan"}>
@@ -36,6 +52,12 @@ export const CreatePlanForm = () => {
             <Input label="Registration Date" id="registrationDate" value={registrationDate} onChange={(e) => setRegistrationDate(e.target.value)} type={"date"} />
             <Input label="Finalization Date" id="finalizationDate" value={finalizationDate} onChange={(e) => setFinalizationDate(e.target.value)} type={"date"} />
             <Input label="Quantity Sessions" id="quantitySesions" value={quantitySession} onChange={(e) => setQuantitySession(e.target.value)} type={"number"} />
+            <div className='mb-3'>
+                <label htmlFor={"exercises"} className='form-label'>
+                    Exercises
+                </label>
+                <Select isMulti options={_exercises} onChange={(data) => setExercises(data.value)} />
+            </div>
             <div className='mb-3'>
                 <label htmlFor={"level"} className='form-label'>
                     Level

@@ -78,6 +78,7 @@ def training_plans():
         return response_body, 200
     if request.method == 'POST':
         data = request.json
+        exercise_data = data.get('exercises', []) 
         row = TrainingPlans(name=data.get('name'),
                             level=data.get('level'),
                             registration_date=data.get('registration_date'),
@@ -86,6 +87,17 @@ def training_plans():
                             is_active=True,
                             user_id=current_user['user_id'])
         db.session.add(row)
+        db.session.flush()
+        # Asociar los ejercicios al plan
+        for exercise in exercise_data:
+            training_exercise = TrainingExercises(
+                repetitions=exercise['repetitions'],
+                series=exercise['series'],
+                training_plan_id=training_plan.id,
+                exercise_id=exercise['exercise_id']
+            )
+            db.session.add(training_exercise)
+
         db.session.commit()
         response_body['message'] = 'Plan de entrenamiento creado exitosamente'
         response_body['results'] = row.serialize()

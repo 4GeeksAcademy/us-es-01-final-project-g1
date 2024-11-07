@@ -6,6 +6,7 @@ const initialState = {
 	errorMessage: null,
 	trainingPlansStates: {
 		trainingPlans: [],
+		trainingPlanExercises: [],
 		isTrainingPlansLoading: false,
 		currentTrainingPlan: {},
 		filter: "",
@@ -25,7 +26,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: { ...initialState },
 		actions: {
-			checkMount: ()=>{
+			checkMount: () => {
 				console.log("monte mi contexto, esto quiere decir que solo se montara una vez y no volvera a tener lectura en el dashboard")
 			},
 			resetState: () => {
@@ -45,7 +46,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 				const data = await response.json()
 				if (!response.ok) {
 					setStore({ message: data.message, errorMessage: data.message })
-					return alert(data.message)
 				}
 
 				localStorage.setItem("token", data.access_token);
@@ -238,6 +238,33 @@ const getState = ({ getStore, getActions, setStore }) => {
 				return response
 			},
 			//Exercises
+			getTrainingPlanExercises: async () => {
+				const uri = `${process.env.BACKEND_URL}/api/training-exercises`
+				const authToken = localStorage.getItem("token")
+				const options = {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: ` Bearer ${authToken}`
+					}
+				}
+				// setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: true } })
+				const response = await fetch(uri, options)
+				const exercises = await response.json()
+				if (!response.ok) {
+					// setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: false } })
+					return
+				}
+				setStore({
+					...getStore(),
+					exercisesStates: {
+						...getStore().exercisesStates,
+						trainingPlanExercises: exercises.results,
+						// isExercisesLoading: false
+					}
+				})
+
+			},
 			getExercises: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/exercises`
 				const authToken = localStorage.getItem("token")
@@ -264,33 +291,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 					}
 				})
 
-			},
-			createExercises: async ({ formData, navigate, }) => {
-				const uri = `${process.env.BACKEND_URL}/api/exercises`
-				const authToken = localStorage.getItem("token")
-				const options = {
-					method: "POST",
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: ` Bearer ${authToken}`
-					},
-					body: JSON.stringify(formData),
-				}
-				const response = await fetch(uri, options)
-				const data = await response.json()
-				if (!response.ok) {
-					setStore({ errorMessage: data.message, message: data.message, })
-				}
-
-				setStore({
-					...getStore(),
-					message: data.message,
-					exercisesStates: {
-						...getStore().exercisesStates,
-					}
-				})
-				navigate("/exercises")
-				return response
 			},
 			getInitial: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/initial-setup`

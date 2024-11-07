@@ -12,10 +12,8 @@ import { formatDate } from "../../helper/formatDate.js";
 
 export const TrainingPlans = () => {
   const { store, actions } = useContext(Context)
-
-  const { trainingPlansStates } = store
+  const { trainingPlansStates, } = store
   const { trainingPlans, isTrainingPlansLoading, filter, currentTrainingPlan } = trainingPlansStates
-
   const [filteredPlans, setFilteredPlans] = useState(() => trainingPlans)
   const navigate = useNavigate()
 
