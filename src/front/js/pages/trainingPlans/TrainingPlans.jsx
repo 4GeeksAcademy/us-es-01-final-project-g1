@@ -1,19 +1,26 @@
 import React, { Children, useContext, useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { FaRegTrashCan } from 'react-icons/fa6';
+import Select from 'react-select';
 import { Link } from 'react-router-dom';
+import { FaRegTrashCan } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import { MdEdit } from 'react-icons/md';
 import { Context } from '../../store/appContext.js';
 import '../../../styles/trainingPlans.css';
 import { BannerMessage } from '../../component/BannerMessage.jsx';
 import { formatDate } from '../../helper/formatDate.js';
-import Select from 'react-select';
-import { AddTrainingExercises, TrainingExercises } from './TrainingExercises.jsx';
+import { AddTrainingExercises, TrainingExercises, UpdateExercise } from './TrainingExercises.jsx';
 
 export const TrainingPlans = () => {
   const [linInitialExercise, setLinInitialExercise] = useState("");
+  //--> luego cambiar el nombre de este estado
   const [showForm, setShowForm] = useState(true);
+
+  //--> con este deberiamos manipular el formulario de actualizar el ejercicio ya existente. 
+  const [updateExerciseState, setUpdateExerciseState] = useState({
+    id: "",
+    show: false
+  });
 
   const { store, actions } = useContext(Context);
   const { trainingPlansStates } = store;
@@ -68,14 +75,17 @@ export const TrainingPlans = () => {
     return setFilteredPlans(trainingPlans);
   };
 
-
-
   const linkInitialExercise = (id) => {
     setLinInitialExercise(id);
     setShowForm(true)
   };
 
-
+  const updateExercises = (id) => {
+    setUpdateExerciseState({
+      id,
+      show:true
+    })
+  }
 
   useEffect(() => {
     handleFilter();
@@ -148,16 +158,17 @@ export const TrainingPlans = () => {
                     <td>{trainingPlan?.quantity_session}</td>
                     <td>{trainingPlan?.level}</td>
                     <td>
-                      <AddTrainingExercises linkedExercises={linkedExercises} onClick={() => linkInitialExercise(trainingPlan.id)} />
-                      <TrainingExercises showForm={showForm} setShowForm={setShowForm} linInitialExercise={linInitialExercise} tpId={trainingPlan.id} />
+                      <AddTrainingExercises showUpdateButton={!updateExerciseState.show} updateExercise={()=>updateExercises(trainingPlan?.id)} linkedExercises={linkedExercises} onClick={() => linkInitialExercise(trainingPlan.id)} />
+                      <TrainingExercises showForm={showForm} setShowForm={setShowForm} linInitialExercise={linInitialExercise} tpId={trainingPlan?.id} />
+                      <UpdateExercise updateExerciseState={updateExerciseState} tpId={trainingPlan?.id} linkedExercises={linkedExercises}/>
                     </td>
                     <td>
                       <div className='d-flex gap-2'>
                         <div className='btn btn-sm btn-primary rounded' onClick={() => crud(trainingPlan, 'edit')}>
-                          <MdEdit size={'1.5rem'} />
+                          <MdEdit size={'1.25rem'} />
                         </div>
                         <div className='btn btn-sm btn-danger rounded'>
-                          <FaRegTrashCan size={'1.5rem'} onClick={() => crud(trainingPlan, 'delete')} />
+                          <FaRegTrashCan size={'1.25rem'} onClick={() => crud(trainingPlan, 'delete')} />
                         </div>
                       </div>
                     </td>

@@ -6,7 +6,6 @@ const initialState = {
 	errorMessage: null,
 	trainingPlansStates: {
 		trainingPlans: [],
-		trainingPlanExercises: [],
 		isTrainingPlansLoading: false,
 		currentTrainingPlan: {},
 		filter: "",
@@ -17,6 +16,7 @@ const initialState = {
 		sessions: [],
 	},
 	exercisesStates: {
+		trainingPlanExercises: [],
 		isExercisesLoading: false,
 		exercises: []
 	}
@@ -67,6 +67,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				const authToken = localStorage.getItem("token")
 				const user = localStorage.getItem("user")
 
+				//--> todo esto es de prueba
 				if (Boolean(authToken) && Boolean(user)) {
 					setStore({ ...getStore(), isLogin: true, })
 					getActions().getTrainingPlans();
@@ -239,12 +240,12 @@ const getState = ({ getStore, getActions, setStore }) => {
 				navigate("/sessions")
 				return response
 			},
-			setTrainingPlanExercises: async (formData, navigate) => {
-				
+			setTrainingPlanExercises: async (formData, navigate, update) => {
+
 				const uri = `${process.env.BACKEND_URL}/api/training-exercises`
 				const authToken = localStorage.getItem("token")
 				const options = {
-					method: 'POST',
+					method: update ? 'PUT' : 'POST',
 					headers: {
 						'Content-Type': 'application/json',
 						Authorization: ` Bearer ${authToken}`
@@ -253,9 +254,9 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 				const response = await fetch(uri, options)
 				const data = await response.json()
-				
+
 				if (!response.ok) {
-				return	setStore({ errorMessage: data.message, message: data.message, })
+					return setStore({ errorMessage: data.message, message: data.message, })
 				}
 				setStore({
 					...getStore(),
@@ -290,6 +291,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 					// setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: false } })
 					return
 				}
+
+
 				setStore({
 					...getStore(),
 					exercisesStates: {
