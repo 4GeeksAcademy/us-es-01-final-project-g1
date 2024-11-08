@@ -3,6 +3,7 @@ import Select from 'react-select';
 import { Context } from '../../store/appContext';
 import { Input } from '../../component/Input.jsx';
 import { useNavigate } from 'react-router-dom';
+import { IoIosCloseCircleOutline } from "react-icons/io";
 
 export const TrainingExercises = ({ linInitialExercise, tpId, showForm, setShowForm, }) => {
   const { store, actions } = useContext(Context);
@@ -30,9 +31,12 @@ export const TrainingExercises = ({ linInitialExercise, tpId, showForm, setShowF
     setShowForm(false);
   };
 
-  if (linInitialExercise === tpId && show) {
+  if (linInitialExercise === tpId && showForm) {
     return (
       <form className={'innerTableForm-container'} onSubmit={addExercises}>
+        <div className="innerTableForm-close">
+          <IoIosCloseCircleOutline onClick={() => setShowForm(false)} />
+        </div>
         <div className='mb-3 table-light'>
           <label htmlFor={'Exercises'} className='form-label innerTableForm-label'>
             Ejercicios
@@ -64,7 +68,7 @@ export const TrainingExercises = ({ linInitialExercise, tpId, showForm, setShowF
   return null;
 };
 
-export const AddTrainingExercises = ({ linkedExercises, onClick, updateExercise, showUpdateButton }) => {
+export const AddTrainingExercises = ({ linkedExercises, onClick, updateExercise, showUpdateButton, showForm }) => {
   const { store } = useContext(Context);
   const { exercisesStates } = store
   const { exercises } = exercisesStates
@@ -79,7 +83,7 @@ export const AddTrainingExercises = ({ linkedExercises, onClick, updateExercise,
       {linkedExercises?.length > 0 ? (
         <>
           {linkedExercises?.map((exercise, index) => (
-            <div >
+            <div key={index}>
               {showUpdateButton && <button className='btn btn-secondary btn-sm' onClick={updateExercise}>Actualizar</button>}
               <div><b>Exercise Name:</b> {foundExercise?.name}</div>
               <div><b>Series:</b> {exercise?.series}</div>
@@ -88,8 +92,8 @@ export const AddTrainingExercises = ({ linkedExercises, onClick, updateExercise,
           ))}
         </>
       ) : (
-        <span className={'innerTableForm-initialMessage'} onClick={onClick}>
-          Add Exercise
+        <span className={`innerTableForm-initialMessage-${showForm ? "open" : "close"}`} onClick={onClick}>
+          {!!showForm ? "Pick an exercise" : "Add Exercise"}
         </span>
       )}
     </>
@@ -137,23 +141,23 @@ export const UpdateExercise = ({ updateExerciseState, tpId, linkedExercises }) =
             </label>
             <Select isDisabled={true} options={[]} value={[{ label: foundExercise?.name, }]} />
           </div>
-                <Input
-                  label='Series'
-                  id='series'
-                  value={series}
-                  onChange={(e) => setSeries(e.target.value)}
-                  type={'text'}
-                />
-                <Input
-                  label='Repetition'
-                  id='Repetition'
-                  value={repetitions}
-                  onChange={(e) => setRepetitions(e.target.value)}
-                  type={'text'}
-                />
+          <Input
+            label='Series'
+            id='series'
+            value={series}
+            onChange={(e) => setSeries(e.target.value)}
+            type={'text'}
+          />
+          <Input
+            label='Repetition'
+            id='Repetition'
+            value={repetitions}
+            onChange={(e) => setRepetitions(e.target.value)}
+            type={'text'}
+          />
           <button className='btn btn-warning w-100'>Actualizar</button>
-      </form>
-    ) : null}
+        </form>
+      ) : null}
     </>
   );
 };

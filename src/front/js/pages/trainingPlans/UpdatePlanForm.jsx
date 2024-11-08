@@ -10,7 +10,6 @@ import { useLevelOptions } from '../../hooks/useLevelOptions.js'
 
 export const UpdatePlanForm = () => {
     const { levelOptions } = useLevelOptions()
-    const user = JSON.parse(localStorage.getItem("user"))
     const { actions, store } = useContext(Context)
     const {trainingPlansStates} = store
     const [name, setName] = useState(trainingPlansStates.currentTrainingPlan.name)
@@ -21,10 +20,7 @@ export const UpdatePlanForm = () => {
     const [exercises, setExercises] = useState([])
     const navigate = useNavigate()
 
-    const exercisesCollection = store?.exercisesStates?.exercises?.map((exercises) => ({
-        label: exercises.name,
-        value: exercises.id
-    }))
+
 
 
     const onEdit = (e) => {
@@ -52,15 +48,6 @@ export const UpdatePlanForm = () => {
             <Input label="Registration Date" id="registrationDate" value={formatDate(registrationDate)} onChange={(e) => setRegistrationDate(e.target.value)} type={"date"} />
             <Input label="Finalization Date" id="finalizationDate" value={formatDate(finalizationDate)} onChange={(e) => setFinalizationDate(e.target.value)} type={"date"} />
             <Input label="Quantity Sessions" id="quantitySesions" value={quantitySession} onChange={(e) => setQuantitySession(e.target.value)} type={"number"} />
-            {/* {store.trainingPlansStates.action === "edit" && (
-                            <div className='mb-3'>
-                            <label htmlFor={"Exercises"} className='form-label'>
-                                Ejercicios
-                            </label>
-                            <Select  options={exercisesCollection} onChange={(data) => setExercises(data.value)} />
-                        </div>
-            )} */}
-
             <div className='mb-3'>
                 <label htmlFor={"level"} className='form-label'>
                     Level

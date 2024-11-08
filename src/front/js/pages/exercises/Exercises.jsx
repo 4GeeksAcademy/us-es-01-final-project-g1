@@ -9,12 +9,6 @@ export const Exercises = () => {
   const { exercisesStates, } = store
   const navigate = useNavigate()
 
-  useEffect(()=>{
-    //--> aqui tengo que validar si ya hice el request
-    //--> o de alguna forma cachear esto para que no lo vuelva a hacer
-    //--> por ahora lo dejamos 
-    actions.getExercises()
-  },[])
   return (
     <div className={"container mt-2"}>
       <table className="table table-dark table-striped">
@@ -37,7 +31,7 @@ export const Exercises = () => {
               </tr>
             )
           }))}
-        
+
         </tbody>
       </table>
     </div>

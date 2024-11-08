@@ -31,6 +31,7 @@ const injectContext = PassedComponent => {
 		*/
 		useEffect(() => {
 			state.actions.checkMount()
+			state.actions.isLogin()
 			// state.actions.getInitial()
 		}, []);
 

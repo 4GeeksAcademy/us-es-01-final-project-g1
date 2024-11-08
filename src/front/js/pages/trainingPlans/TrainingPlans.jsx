@@ -13,8 +13,7 @@ import { AddTrainingExercises, TrainingExercises, UpdateExercise } from './Train
 
 export const TrainingPlans = () => {
   const [linInitialExercise, setLinInitialExercise] = useState("");
-  //--> luego cambiar el nombre de este estado
-  const [showForm, setShowForm] = useState(true);
+  const [showForm, setShowForm] = useState(false);
 
   //--> con este deberiamos manipular el formulario de actualizar el ejercicio ya existente. 
   const [updateExerciseState, setUpdateExerciseState] = useState({
@@ -54,7 +53,17 @@ export const TrainingPlans = () => {
         Swal.fire({
           title: 'Deleted!',
           text: 'Your Training Plan has been deleted.',
-          icon: 'success'
+          icon: 'success',
+          confirmButtonText: "Close",
+          confirmButtonColor: '#ff5733',
+        });
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        Swal.fire({
+          title: "Cancelled",
+          text: "Your Training Plan is safe :)",
+          icon: "error",
+          confirmButtonText: "Close",
+          confirmButtonColor: '#ff5733',
         });
       }
     });
@@ -83,18 +92,11 @@ export const TrainingPlans = () => {
   const updateExercises = (id) => {
     setUpdateExerciseState({
       id,
-      show:true
+      show: true
     })
   }
 
-  useEffect(() => {
-    handleFilter();
-    const getTP = async () => {
-      actions.getTrainingPlans();
-      actions.getTrainingPlanExercises();
-    };
-    getTP();
-  }, [filter]);
+  useEffect(() => handleFilter(), [filter]);
 
   if (isTrainingPlansLoading) {
     return (
@@ -158,9 +160,24 @@ export const TrainingPlans = () => {
                     <td>{trainingPlan?.quantity_session}</td>
                     <td>{trainingPlan?.level}</td>
                     <td>
-                      <AddTrainingExercises showUpdateButton={!updateExerciseState.show} updateExercise={()=>updateExercises(trainingPlan?.id)} linkedExercises={linkedExercises} onClick={() => linkInitialExercise(trainingPlan.id)} />
-                      <TrainingExercises showForm={showForm} setShowForm={setShowForm} linInitialExercise={linInitialExercise} tpId={trainingPlan?.id} />
-                      <UpdateExercise updateExerciseState={updateExerciseState} tpId={trainingPlan?.id} linkedExercises={linkedExercises}/>
+                      <AddTrainingExercises
+                        showUpdateButton={!updateExerciseState.show}
+                        updateExercise={() => updateExercises(trainingPlan?.id)}
+                        linkedExercises={linkedExercises}
+                        onClick={() => linkInitialExercise(trainingPlan.id)}
+                        showForm={showForm}
+                      />
+                      <TrainingExercises
+                        showForm={showForm}
+                        setShowForm={setShowForm}
+                        linInitialExercise={linInitialExercise}
+                        tpId={trainingPlan?.id}
+                      />
+                      <UpdateExercise
+                        updateExerciseState={updateExerciseState}
+                        tpId={trainingPlan?.id}
+                        linkedExercises={linkedExercises}
+                      />
                     </td>
                     <td>
                       <div className='d-flex gap-2'>

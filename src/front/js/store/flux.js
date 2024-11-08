@@ -73,6 +73,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					getActions().getTrainingPlans();
 					getActions().getSessions();
 					getActions().getExercises();
+					getActions().getTrainingPlanExercises();
 				}
 
 			},
@@ -126,7 +127,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 				})
 			},
 			getCurrentTrainingPlan: (plan) => {
-				console.log("asd")
 				setStore({
 					...getStore(),
 					trainingPlansStates: {
@@ -165,19 +165,10 @@ const getState = ({ getStore, getActions, setStore }) => {
 				if (!response.ok) {
 					setStore({ errorMessage: data.message, message: data.message, })
 				}
-				if (action === "delete") {
-					getActions().getTrainingPlans()
-				}
+				
+				getActions().getTrainingPlans()
+				getActions().getTrainingPlanExercises()
 
-
-				setStore({
-					...getStore(),
-					message: data.message,
-					trainingPlansStates: {
-						...getStore().trainingPlansStates,
-						filter: ""
-					}
-				})
 				navigate("/training-plan")
 				return response
 			},

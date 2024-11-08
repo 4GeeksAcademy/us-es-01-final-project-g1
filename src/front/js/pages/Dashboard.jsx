@@ -44,24 +44,24 @@ export const Dashboard = () => {
       </div>
       <div className='container-fluid'>
         <div className="row">
-          <div className='col col-sm-12 col-md-6 col-lg-6'>
+          <div className='col-12 col-sm-12 col-md-6 col-lg-6'>
             {store.exercisesStates.isExercisesLoading ? <Loader /> : (
-              <CardInfo title={"Exercises"} subtitle={"Powerful exercises for your training and you!"} description={"awesome exercises"} model={"exercises"} setupItems={{}} />
+              <CardInfo title={"Exercises"} subtitle={"Powerful exercises!"} description={"List of exercises, take a look at them and see the details."} model={"exercises"} setupItems={{}} />
             )}
           </div>
-          <div className='col col-sm-12 col-md-6 col-lg-6'>
+          <div className='col-12 col-sm-12 col-md-6 col-lg-6'>
             {store.trainingPlansStates.isTrainingPlansLoading ? <Loader /> : store?.trainingPlansStates?.trainingPlans?.length ? (
-              <CardInfo setupItems={detailsPlanLevelDetails} model={"training_plans"} title={"Planes de Ejercicio"} subtitle={"Los Mejores planes de Ejercicios"} description={"Aqui puedes encontrar un plan que se adapte a tus necesidades"} />
+              <CardInfo setupItems={detailsPlanLevelDetails} model={"training_plans"} title={"Planes de Ejercicio"} subtitle={"Best Exercises"} description={"Here you can find a plan that suits your needs."} />
             ) : (<CreateCard model={"training_plans"} />)}
           </div>
         </div>
         <div className="row">
-          <div className='col col-sm-12 col-md-6 col-lg-6'>
+          <div className='col-12 col-sm-12 col-md-6 col-lg-6'>
             {store.sessionsStates.isSessionsLoading ? <Loader /> : store?.sessionsStates?.sessions?.length ? (
               <CardInfo title={"Sesions"} subtitle={"Best Sessions bound to the training plan"} description={"some description"} model={"sessions"} setupItems={{}} />
             ) : (<CreateCard model={"sessions"} />)}
           </div>
-          <div className='col col-sm-12 col-md-6 col-lg-6'>
+          <div className='col-12 col-sm-12 col-md-6 col-lg-6'>
             {/* <CardInfo title={"titulo modelo3"} subtitle={"algun mensaje motivador4"} description={"algun mensaje"} /> */}
             <CreateCard />
           </div>
