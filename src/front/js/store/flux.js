@@ -4,6 +4,7 @@ const initialState = {
 	user: {},
 	isAdmin: false,
 	errorMessage: null,
+	isLoginLoading: false,
 	trainingPlansStates: {
 		trainingPlans: [],
 		isTrainingPlansLoading: false,
@@ -22,6 +23,30 @@ const initialState = {
 	}
 }
 
+const fetchData = async ({ uri, method = "GET", authToken = null, body = null }) => {
+	const headers = {
+		"Content-Type": "application/json",
+	};
+	if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
+	const options = {
+		method,
+		headers,
+		body: body ? JSON.stringify(body) : null,
+	};
+
+	try {
+		const response = await fetch(uri, options);
+		const data = await response.json();
+		if (!response.ok) {
+			return { error: data.message || "An error occurred", data: null };
+		}
+		return { error: null, data };
+	} catch (error) {
+		return { error: "Network error", data: null };
+	}
+};
+
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: { ...initialState },
@@ -32,31 +57,24 @@ const getState = ({ getStore, getActions, setStore }) => {
 			resetState: () => {
 				return setStore({ ...initialState })
 			},
-			login: async (formdata, navigate) => {
-				setStore({ errorMessage: null, })
-				const uri = `${process.env.BACKEND_URL}/api/login`
-				const options = {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(formdata),
-				};
-				const response = await fetch(uri, options);
-				const data = await response.json()
-				if (!response.ok) {
-					setStore({ message: data.message, errorMessage: data.message })
-				}
-
+			login: async (formData, navigate) => {
+				setStore({ errorMessage: null, isLoginLoading: true });
+				const { error, data } = await fetchData({
+					uri: `${process.env.BACKEND_URL}/api/login`,
+					method: "POST",
+					body: formData,
+				});
+				if (error) setStore({ message: error, errorMessage: error, isLoginLoading: false, });
 				localStorage.setItem("token", data.access_token);
-				localStorage.setItem("user", JSON.stringify(data.results))
+				localStorage.setItem("user", JSON.stringify(data.results));
 				setStore({
 					isLogin: true,
 					isAdmin: data?.results?.is_admin,
 					user: data?.results,
-					message: data.message
-				})
-				navigate('/dashboard')
+					message: data.message,
+					isLoginLoading: false,
+				});
+				navigate("/dashboard");
 			},
 			logout: () => {
 				localStorage.removeItem("token");
@@ -67,36 +85,35 @@ const getState = ({ getStore, getActions, setStore }) => {
 				const authToken = localStorage.getItem("token")
 				const user = localStorage.getItem("user")
 
-				//--> todo esto es de prueba
-				if (Boolean(authToken) && Boolean(user)) {
-					setStore({ ...getStore(), isLogin: true, })
+				if (authToken && user) {
+					setStore({ ...getStore(), isLogin: true, user: JSON.parse(user) });
 					getActions().getTrainingPlans();
 					getActions().getSessions();
 					getActions().getExercises();
 					getActions().getTrainingPlanExercises();
+				} else {
+					setStore({ isLogin: false, user: {}, isAdmin: false });
 				}
 
 			},
-			register: async (formdata, navigate) => {
-				setStore({ errorMessage: null, })
-				const uri = `${process.env.BACKEND_URL}/api/register`
-				const options = {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(formdata),
-				};
-				const response = await fetch(uri, options);
-				const data = await response.json()
-				if (!response.ok) {
-					setStore({ errorMessage: data.message, message: data.message, })
-					return alert(data.message)
-				}
+			register: async (formData, navigate) => {
+				setStore({ errorMessage: null, isLoginLoading: true });
+				const { error, data } = await fetchData({
+					uri: `${process.env.BACKEND_URL}/api/register`,
+					method: "POST",
+					body: formData,
+				});
+				if (error) setStore({ errorMessage: error, message: error, isLoginLoading: false });
 				localStorage.setItem("token", data.access_token);
-				localStorage.setItem("user", JSON.stringify(data.results))
-				setStore({ isLogin: true, isAdmin: data.results.is_admin, user: data.results, message: data.message })
-				navigate('/dashboard')
+				localStorage.setItem("user", JSON.stringify(data.results));
+				setStore({
+					isLogin: true,
+					isAdmin: data.results.is_admin,
+					user: data.results,
+					message: data.message,
+					isLoginLoading: false,
+				});
+				navigate("/dashboard");
 			},
 			// trainingPlans
 			getTrainingPlans: async () => {
@@ -160,6 +177,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					},
 					body: JSON.stringify(formData),
 				}
+				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: true } })
 				const response = await fetch(uri, options)
 				const data = await response.json()
 				if (!response.ok) {
@@ -168,7 +186,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 				getActions().getTrainingPlanExercises()
 				getActions().getTrainingPlans()
-
+				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: false } })
 				navigate("/training-plan")
 				return response
 			},
@@ -189,15 +207,15 @@ const getState = ({ getStore, getActions, setStore }) => {
 				setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: true } })
 				const response = await fetch(uri, options)
 				const sessions = await response.json()
+				console.log("🚀 ~ getSessions: ~ sessions:", sessions)
 				if (!response.ok) {
 					setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: false } })
-					return
 				}
 				setStore({
 					...getStore(),
 					sessionsStates: {
 						...getStore().sessionsStates,
-						sessions: sessions.results,
+						sessions: [...sessions.results],
 						isSessionsLoading: false
 					}
 				})
@@ -214,18 +232,30 @@ const getState = ({ getStore, getActions, setStore }) => {
 					},
 					body: JSON.stringify(formData),
 				}
+				setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: true } })
 				const response = await fetch(uri, options)
 				const data = await response.json()
 				if (!response.ok) {
-					setStore({ errorMessage: data.message, message: data.message, })
+					return setStore({
+						...getStore(),
+						errorMessage: data.message,
+						message: data.message,
+						sessionsStates: {
+							isSessionsLoading: false
+						}
+					})
 				}
-
 
 				setStore({
 					...getStore(),
 					message: data.message,
+				})
+				getActions().getSessions()
+				setStore({
+					...getStore(),
 					sessionsStates: {
 						...getStore().sessionsStates,
+						isSessionsLoading: true
 					}
 				})
 				navigate("/sessions")
@@ -249,19 +279,9 @@ const getState = ({ getStore, getActions, setStore }) => {
 				if (!response.ok) {
 					return setStore({ errorMessage: data.message, message: data.message, })
 				}
-				setStore({
-					...getStore(),
-					message: data.message,
-					exercisesStates: {
-						...getStore().exercisesStates,
-						trainingPlanExercises: [
-							...getStore().exercisesStates.trainingPlanExercises,
-							data.results
-						]
-					}
-				})
+				getActions().getTrainingPlans()
+				getActions().getTrainingPlanExercises()
 				navigate("/training-plan")
-				console.log("data adentro del setTPE", data)
 				return response
 			},
 			//Exercises

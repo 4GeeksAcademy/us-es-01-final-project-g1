@@ -10,6 +10,7 @@ import '../../../styles/trainingPlans.css';
 import { BannerMessage } from '../../component/BannerMessage.jsx';
 import { formatDate } from '../../helper/formatDate.js';
 import { AddTrainingExercises, TrainingExercises } from './TrainingExercises.jsx';
+import { FaInfo } from 'react-icons/fa';
 
 export const TrainingPlans = () => {
   const [linInitialExercise, setLinInitialExercise] = useState("");
@@ -83,6 +84,8 @@ export const TrainingPlans = () => {
     setShowForm(true)
   };
 
+  const Message = () => <div className='infoMessage'><FaInfo /> You can add your exercises directly from the table or when creating a new training plan.</div>
+
 
   useEffect(() => handleFilter(), [filter]);
 
@@ -97,7 +100,7 @@ export const TrainingPlans = () => {
     <div className={'container mt-2'}>
       <BannerMessage
         variant={'info'}
-        message={'Crea tu Session eligiendo un plan de entrenamiento'}
+        message={<Message />}
         evaluation={true}
       />
       <div className='trainingPlans-header-container'>
@@ -155,7 +158,7 @@ export const TrainingPlans = () => {
                       linInitialExercise={linInitialExercise}
                       tpId={trainingPlan?.id}
                     />
-       
+
                   </td>
                   <td>
                     <div className='d-flex gap-2'>

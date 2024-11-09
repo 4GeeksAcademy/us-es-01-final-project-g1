@@ -9,7 +9,14 @@
   gap: 1rem;
 }
 
-.innerTableForm-initialMessage-close,
+.infoMessage {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  place-content: center;
+  font-size: 18px;
+}
+
 .innerTableForm-initialMessage-open {
   margin: 0.5rem;
   padding: 0.5rem;
@@ -19,7 +26,17 @@
   align-items: center;
   place-content: center;
   font-weight: 500;
-  transition: all 0.3s ease-in-out;
+}
+
+.innerTableForm-initialMessage-close {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--primary);
+  display: inline-flex;
+  align-items: center;
+  place-content: flex-start;
+  font-weight: 500;
 }
 
 .innerTableForm-initialMessage-close:hover {
@@ -81,24 +98,26 @@
   border-radius: 50%;
   background-color: var(--primary);
   position: relative;
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   place-content: center;
 }
+
 .innerTableForm-container-exercisesDetails-iconWrapper2 {
   border-radius: 50%;
   background-color: var(--primary);
   position: absolute;
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   place-content: center;
-  right: -15px;
+  right: 171px;
+  z-index: 1;
 }
 
-.innerTableForm-container-exercisesDetails-iconWrapper-icon  {
+.innerTableForm-container-exercisesDetails-iconWrapper-icon {
   position: absolute;
 }

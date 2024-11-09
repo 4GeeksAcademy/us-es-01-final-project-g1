@@ -127,23 +127,29 @@ export const AddTrainingExercises = ({ trainingPlan, onClick,/*  updateExercise,
                 <FaRegEye />
               </div>
             </div>
-          ) : linkedExercises?.map((exercise, index) => {
-            const exerciseDetails = exercises.find(exe => exe.id === exercise.exercise_id)
-            const exerciseName = exerciseDetails ? exerciseDetails.name : "unk"
-            return (
-              <div key={index} className={"innerTableForm-container-exercises"}>
-                <div className='innerTableForm-container-exercisesDetails-iconWrapper2' onClick={() => setShowExercisesDetails(false)}>
+          ) : (<>
+            <div className='innerTableForm-container-exercisesDetails-iconWrapper2' onClick={() => setShowExercisesDetails(false)}>
+              <div className='innerTableForm-container-exercisesDetails-iconWrapper-icon'>
+                <FaRegEyeSlash className='algo' />
+              </div>
+            </div>
+            {linkedExercises?.map((exercise, index) => {
+              const exerciseDetails = exercises.find(exe => exe.id === exercise.exercise_id)
+              const exerciseName = exerciseDetails ? exerciseDetails.name : "unk"
+              return (
+                <div key={index} className={"innerTableForm-container-exercises"}>
+                  {/* <div className='innerTableForm-container-exercisesDetails-iconWrapper2' onClick={() => setShowExercisesDetails(false)}>
                   <div className='innerTableForm-container-exercisesDetails-iconWrapper-icon'>
                     <FaRegEyeSlash className='algo' />
-
                   </div>
+                </div> */}
+                  <div><b>Exercise Name: </b>{exerciseName}</div>
+                  <div><b>Series:</b> {exercise?.series}</div>
+                  <div><b>Repetitions:</b> {exercise?.repetitions}</div>
                 </div>
-                <div><b>Exercise Name: </b>{exerciseName}</div>
-                <div><b>Series:</b> {exercise?.series}</div>
-                <div><b>Repetitions:</b> {exercise?.repetitions}</div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </>)}
         </>
       ) : linkedExercises?.length < 1 ? (
         <span className={`innerTableForm-initialMessage-${showForm ? "open" : "close"}`} onClick={onClick}>

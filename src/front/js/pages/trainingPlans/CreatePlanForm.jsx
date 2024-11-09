@@ -73,7 +73,7 @@ export const CreatePlanForm = () => {
     };
 
     return (
-        <FormLayout title={"Create your Exercise Plan"} onSubmit={createPlan} actionText={"Create Plan"} customWidth={"700px"} goBackOnClick={() => navigate("/training-plan")}>
+        <FormLayout isLoading={store.trainingPlansStates.isTrainingPlansLoading} title={"Create your Exercise Plan"} onSubmit={createPlan} actionText={"Create Plan"} customWidth={"700px"} goBackOnClick={() => navigate("/training-plan")}>
             <div className="row">
                 <div className="col-6">
                     <Input label="Name" id="name" value={formState.name} onChange={(e) => onChange("name", e.target.value)} type={"text"} />

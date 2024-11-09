@@ -23,8 +23,7 @@ export const Dashboard = () => {
     //   console.log("AQUI DEBERIA NAVEGAR AL LOGIN Y NO LO HACE")
     //   navigate("/")
     // }
-    actions.isLogin()
-  }, [store.isLogin]);
+  }, []);
 
   return (
     <main className='dashboard-container'>

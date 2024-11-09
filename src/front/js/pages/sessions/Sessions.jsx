@@ -8,59 +8,52 @@ import { Context } from '../../store/appContext.js'
 import "../../../styles/trainingPlans.css"
 import { BannerMessage } from "../../component/BannerMessage.jsx";
 import { formatDate } from "../../helper/formatDate.js";
-
+import { SkeletonTable } from "../../component/Loader.jsx";
+import "../../../styles/sessions.css"
 
 export const Sessions = () => {
-  const { store, actions } = useContext(Context)
-  const { sessionsStates, trainingPlansStates } = store
+  const { store, } = useContext(Context)
+  const { sessionsStates, } = store
+  console.log("🚀 ~ sessionsStates:", sessionsStates)
   const navigate = useNavigate()
 
-  const findTPName = (id) => {
-    const plan = trainingPlansStates?.trainingPlans.find(t => t.id === id)
-    return plan?.name
-  }
 
-  // useEffect(() => {
-  //   const getSessions = async () => {
-  //     actions.getSessions()
-  //   }
-  //   getSessions()
-  // }, []);
 
-  if (false) {
+
+  if (sessionsStates.isSessionsLoading) {
     return (
-      <div className={"container mt-2"}>
-        <h1 style={{ color: "yellow" }}>Loader de Tabla</h1>
+      <div className={"container mt-5"}>
+        <SkeletonTable />
       </div>
     )
   }
   return (
     <div className={"container mt-2"}>
       {/* <BannerMessage variant={"info"} message={"Crea tu Session eligiendo un plan de entrenamiento"} evaluation={true}/> */}
-      <div className="trainingPlans-header-container">
-
-        <div className={""}>
-          <Link to={"/create-sessions"} className={"btn btn-primary"}>
-            Crear Session
-          </Link>
-        </div>
+      <div className="sessions-header-container">
+        <Link to={"/create-sessions"} className={"btn btn-warning"}>
+          Create a Session
+        </Link>
       </div>
+      {/* <SkeletonTable /> */}
       <table className="table table-dark table-striped">
         <thead>
           <tr>
-            <th scope="col">date</th>
-            <th scope="col">training plan</th>
+            <th scope="col">Session Name</th>
+            <th scope="col">Date</th>
+            <th scope="col">Training Plan</th>
           </tr>
         </thead>
         <tbody>
-          {Children.toArray(sessionsStates.sessions.map((session) => {
+          {sessionsStates.sessions.map((session, index) => {
             return (
-              <tr>
+              <tr key={index}>
+                <td>{session.name}</td>
                 <td>{formatDate(session.date)}</td>
-                <td>{findTPName(session.training_plan_id)}</td>
+                <td>{session.training_plan_name}</td>
               </tr>
             )
-          }))}
+          })}
 
 
         </tbody>

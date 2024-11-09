@@ -29,7 +29,11 @@ def login():
     password = request.json.get("password", None)
     user = db.session.execute(db.select(Users).where(Users.email == email, Users.password == password, Users.is_active)).scalar()
     if not user:
-        response_body['message'] = "Bad email or password"
+        response_body['message'] = "There is no account with this email, please register."
+        return response_body, 404
+    
+    if user.password != password:
+        response_body['message'] = "Incorrect password, please try again."
         return response_body, 401
     access_token = create_access_token(identity={"email": user.email, 'user_id': user.id, "is_admin": user.is_admin})
     response_body['message'] = f'Usuario {email} logeado con exito'
@@ -167,8 +171,13 @@ def sessions():
         if row.user_id != current_user['user_id']:
             response_body['message'] = 'Sin Autorizacion'
             return response_body, 401
-        session_row = Sessions(date=data.get('date'),
-                       training_plan_id=data.get('training_plan_id'))
+        
+        session_row = Sessions(
+            date=data.get('date'),
+            training_plan_id=data.get('training_plan_id'),
+            name=data.get('name')
+        )
+
         db.session.add(session_row)
         db.session.commit()
         response_body['message'] = 'Sesión creada exitosamente'

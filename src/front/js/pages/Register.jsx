@@ -8,7 +8,6 @@ import { BannerMessage } from "../component/BannerMessage.jsx";
 
 export const Register = () => {
     const { store, actions } = useContext(Context)
-    console.log("ADENTRO DE REGISTER", store.error)
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("")
     const [name, setName] = useState('')
@@ -25,7 +24,7 @@ export const Register = () => {
         actions.register(data, navigate)
     }
     return (
-        <FormLayout customWidth={"600px"} title={'Registrate'} onSubmit={handleRegister} actionText={'Registrar'} customMessage={<BannerMessage evaluation={store.errorMessage} message={store.message} />} >
+        <FormLayout isLoading={store.isLoginLoading} customWidth={"600px"} title={'Registrate'} onSubmit={handleRegister} actionText={'Registrar'} customMessage={<BannerMessage evaluation={store.errorMessage} message={store.message} />} >
             <div className="row">
                 <div className="col-6">
                     <Input label="Email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} type={"text"} />

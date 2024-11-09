@@ -11,7 +11,7 @@ import { useLevelOptions } from '../../hooks/useLevelOptions.js'
 export const UpdatePlanForm = () => {
     const { levelOptions } = useLevelOptions()
     const { actions, store } = useContext(Context)
-    const {trainingPlansStates} = store
+    const { trainingPlansStates } = store
     const [name, setName] = useState(trainingPlansStates.currentTrainingPlan.name)
     const [registrationDate, setRegistrationDate] = useState(store.trainingPlansStates.currentTrainingPlan.registration_date) // definir formato de fechas
     const [finalizationDate, setFinalizationDate] = useState(store.trainingPlansStates.currentTrainingPlan.finalization_date) // definir formato de fechas
@@ -33,17 +33,17 @@ export const UpdatePlanForm = () => {
             level: level.value,
             is_active: store.trainingPlansStates.currentTrainingPlan.is_active
         }
-        return actions.crudTrainingPlans({ 
-            formData, 
-            navigate, 
+        return actions.crudTrainingPlans({
+            formData,
+            navigate,
             currentPlanId: store.trainingPlansStates.currentTrainingPlan.id,
             action: trainingPlansStates.action,
             exercise_id: exercises
-         })
+        })
     }
 
     return (
-        <FormLayout title={`${trainingPlansStates.action === "edit" && "Edita"} tu Plan de Entrenamiento`} onSubmit={onEdit} actionText={"Edit Plan"}>
+        <FormLayout isLoading={trainingPlansStates.isTrainingPlansLoading} title={`${trainingPlansStates.action === "edit" && "Edita"} tu Plan de Entrenamiento`} onSubmit={onEdit} actionText={"Edit Plan"}>
             <Input label="Name" id="name" value={name} onChange={(e) => setName(e.target.value)} type={"text"} />
             <Input label="Registration Date" id="registrationDate" value={formatDate(registrationDate)} onChange={(e) => setRegistrationDate(e.target.value)} type={"date"} />
             <Input label="Finalization Date" id="finalizationDate" value={formatDate(finalizationDate)} onChange={(e) => setFinalizationDate(e.target.value)} type={"date"} />

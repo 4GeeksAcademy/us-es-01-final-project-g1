@@ -107,6 +107,7 @@ class Sessions(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime(), nullable=False)
     training_plan_id = db.Column(db.Integer, db.ForeignKey('training_plans.id'), nullable=False)
+    name = db.Column(db.String(255), nullable=True)
     training_plan_to = db.relationship('TrainingPlans', foreign_keys=[training_plan_id], backref=db.backref('sessions', lazy='select'))
 
     def __repr__(self):
@@ -115,7 +116,9 @@ class Sessions(db.Model):
     def serialize(self):
         return {'id': self.id,
                 'date': self.date,
-                'training_plan_id': self.training_plan_id}
+                'training_plan_id': self.training_plan_id,
+                'training_plan_name': self.training_plan_to.name if self.training_plan_to else None,
+                'name': self.name}
 
 
 class SessionExercises(db.Model):

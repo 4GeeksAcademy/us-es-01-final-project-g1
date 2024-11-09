@@ -19,7 +19,7 @@ export const Login = () => {
   };
 
   return (
-    <FormLayout customMessage={<BannerMessage evaluation={store.errorMessage} message={store.message} />} title={'Inicie Sesion'} onSubmit={handleSubmit} actionText={'Iniciar Sesion'} adionalActionText={"Registrate"} adionalActionPath={'/register'} adionalActionHint={'¿No tienes una cuenta?'} aditionalCallback={() => actions.resetState()}>
+    <FormLayout isLoading={store.isLoginLoading} customMessage={<BannerMessage evaluation={store.errorMessage} message={store.message} />} title={'Log In'} onSubmit={handleSubmit} actionText={'Start!'} adionalActionText={"Register"} adionalActionPath={'/register'} adionalActionHint={"Don't have an account?"} aditionalCallback={() => actions.resetState()}>
       <Input label="Email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} type={"text"} />
       <Input label="Password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} type={"password"} />
     </FormLayout>

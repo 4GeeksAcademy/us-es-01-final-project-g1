@@ -14,14 +14,15 @@ export const CreateSessions = () => {
     value: plan.id
   }))
 
-  // training_plan_id, date
   const [date, setDate] = useState("")
+  const [name, setName] = useState("")
   const [trainingPlan, setTrainingPlan] = useState("")
   const navigate = useNavigate()
-  const createPlan = (e) => {
+  const createSession = (e) => {
     e.preventDefault()
     const formData = {
       date,
+      name,
       training_plan_id: trainingPlan,
       user_id: store.user.id ?? userFromLocalStorage.id
     }
@@ -29,7 +30,8 @@ export const CreateSessions = () => {
   }
 
   return (
-    <FormLayout title={"Create your Session"} onSubmit={createPlan} actionText={"Create Session"}>
+    <FormLayout isLoading={store.sessionsStates.isSessionsLoading} title={"Create your Session"} onSubmit={createSession} actionText={"Create Session"}  >
+      <Input label="Session Name" id="name" value={name} onChange={(e) => setName(e.target.value)} type={"text"} />
       <Input label="Date" id="date" value={date} onChange={(e) => setDate(e.target.value)} type={"date"} />
       <div className='mb-3'>
         <label htmlFor={"level"} className='form-label'>

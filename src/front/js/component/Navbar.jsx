@@ -15,7 +15,7 @@ export const Navbar = () => {
 	return (
 		<nav className="navbar sticky-top">
 			<div className="navbar-brand">
-				<Link to={store.isLogin ? "/dashboard" : "/dashboard"}>
+				<Link to={store.isLogin ? "/dashboard" : "/"}>
 					<BrandLogo />
 				</Link>
 			</div >
