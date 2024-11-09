@@ -165,9 +165,9 @@ const getState = ({ getStore, getActions, setStore }) => {
 				if (!response.ok) {
 					setStore({ errorMessage: data.message, message: data.message, })
 				}
-				
-				getActions().getTrainingPlans()
+
 				getActions().getTrainingPlanExercises()
+				getActions().getTrainingPlans()
 
 				navigate("/training-plan")
 				return response
@@ -232,9 +232,9 @@ const getState = ({ getStore, getActions, setStore }) => {
 				return response
 			},
 			setTrainingPlanExercises: async (formData, navigate, update) => {
-
 				const uri = `${process.env.BACKEND_URL}/api/training-exercises`
 				const authToken = localStorage.getItem("token")
+
 				const options = {
 					method: update ? 'PUT' : 'POST',
 					headers: {

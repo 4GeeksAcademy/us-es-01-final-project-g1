@@ -236,11 +236,20 @@ def training_exercises():
         return response_body, 200
     if request.method == 'POST':
         data = request.json
-        row = TrainingExercises(training_plan_id=data.get('training_plan_id'),
-                                exercise_id=data.get('exercise_id'),
-                                repetitions=data.get('repetitions'),
-                                series=data.get('series'))
-        db.session.add(row)
+
+        # Verifica si `data` es un solo objeto o una lista de objetos
+        exercises_data = data if isinstance(data, list) else [data]
+        new_exercises = []
+        for exercise in exercises_data:
+            row = TrainingExercises(
+                training_plan_id=exercise.get('training_plan_id'),
+                exercise_id=exercise.get('exercise_id'),
+                repetitions=exercise.get('repetitions'),
+                series=exercise.get('series')
+            )
+            db.session.add(row)
+            new_exercises.append(row)
+
         db.session.commit()
         response_body['message'] = 'Ejercicio añadido al plan de entrenamiento exitosamente'
         response_body['results'] = row.serialize()

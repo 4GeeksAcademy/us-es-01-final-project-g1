@@ -1,4 +1,4 @@
-import React, { Children, useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import Select from 'react-select';
 import { Link } from 'react-router-dom';
@@ -9,17 +9,11 @@ import { Context } from '../../store/appContext.js';
 import '../../../styles/trainingPlans.css';
 import { BannerMessage } from '../../component/BannerMessage.jsx';
 import { formatDate } from '../../helper/formatDate.js';
-import { AddTrainingExercises, TrainingExercises, UpdateExercise } from './TrainingExercises.jsx';
+import { AddTrainingExercises, TrainingExercises } from './TrainingExercises.jsx';
 
 export const TrainingPlans = () => {
   const [linInitialExercise, setLinInitialExercise] = useState("");
   const [showForm, setShowForm] = useState(false);
-
-  //--> con este deberiamos manipular el formulario de actualizar el ejercicio ya existente. 
-  const [updateExerciseState, setUpdateExerciseState] = useState({
-    id: "",
-    show: false
-  });
 
   const { store, actions } = useContext(Context);
   const { trainingPlansStates } = store;
@@ -89,12 +83,6 @@ export const TrainingPlans = () => {
     setShowForm(true)
   };
 
-  const updateExercises = (id) => {
-    setUpdateExerciseState({
-      id,
-      show: true
-    })
-  }
 
   useEffect(() => handleFilter(), [filter]);
 
@@ -121,15 +109,15 @@ export const TrainingPlans = () => {
             Intermedio
           </button>
           <button className={'btn btn-secondary'} onClick={() => actions.setTrainingPlansFilters('advanced')}>
-            Avanzado
+            Advanced
           </button>
           <button className={'btn btn-danger'} onClick={() => actions.setTrainingPlansFilters('')}>
-            Limpiar filtros
+            Clear Filters
           </button>
         </div>
         <div className={''}>
           <Link to={'/create-plan'} className={'btn btn-warning'}>
-            Crear Plan de Entrenamiento
+            Create Training Plan
           </Link>
         </div>
       </div>
@@ -141,58 +129,48 @@ export const TrainingPlans = () => {
             <th scope='col'>Finalization Date</th>
             <th scope='col'># Session</th>
             <th scope='col'>Level</th>
-            <th scope='col'>Ejercios</th>
+            <th scope='col'>Exercises</th>
             <th scope='col'></th>
           </tr>
         </thead>
         <tbody>
           {trainingPlans &&
-            Children.toArray(
-              (Boolean(filter) ? filteredPlans : trainingPlans)?.map((trainingPlan) => {
-                const linkedExercises = store?.exercisesStates?.trainingPlanExercises?.filter(
-                  (exercise) => exercise?.training_plan_id === trainingPlan?.id
-                );
-                return (
-                  <tr>
-                    <td>{trainingPlan?.name}</td>
-                    <td>{formatDate(trainingPlan?.registration_date)}</td>
-                    <td>{formatDate(trainingPlan?.finalization_date)}</td>
-                    <td>{trainingPlan?.quantity_session}</td>
-                    <td>{trainingPlan?.level}</td>
-                    <td>
-                      <AddTrainingExercises
-                        showUpdateButton={!updateExerciseState.show}
-                        updateExercise={() => updateExercises(trainingPlan?.id)}
-                        linkedExercises={linkedExercises}
-                        onClick={() => linkInitialExercise(trainingPlan.id)}
-                        showForm={showForm}
-                      />
-                      <TrainingExercises
-                        showForm={showForm}
-                        setShowForm={setShowForm}
-                        linInitialExercise={linInitialExercise}
-                        tpId={trainingPlan?.id}
-                      />
-                      <UpdateExercise
-                        updateExerciseState={updateExerciseState}
-                        tpId={trainingPlan?.id}
-                        linkedExercises={linkedExercises}
-                      />
-                    </td>
-                    <td>
-                      <div className='d-flex gap-2'>
-                        <div className='btn btn-sm btn-primary rounded' onClick={() => crud(trainingPlan, 'edit')}>
-                          <MdEdit size={'1.25rem'} />
-                        </div>
-                        <div className='btn btn-sm btn-danger rounded'>
-                          <FaRegTrashCan size={'1.25rem'} onClick={() => crud(trainingPlan, 'delete')} />
-                        </div>
+            (Boolean(filter) ? filteredPlans : trainingPlans)?.map((trainingPlan, index) => {
+              return (
+                <tr key={index}>
+                  <td>{trainingPlan?.name}</td>
+                  <td>{formatDate(trainingPlan?.registration_date)}</td>
+                  <td>{formatDate(trainingPlan?.finalization_date)}</td>
+                  <td>{trainingPlan?.quantity_session}</td>
+                  <td>{trainingPlan?.level}</td>
+                  <td>
+                    <AddTrainingExercises
+                      trainingPlan={trainingPlan}
+                      onClick={() => linkInitialExercise(trainingPlan.id)}
+                      showForm={showForm}
+                    />
+                    <TrainingExercises
+                      showForm={showForm}
+                      setShowForm={setShowForm}
+                      linInitialExercise={linInitialExercise}
+                      tpId={trainingPlan?.id}
+                    />
+       
+                  </td>
+                  <td>
+                    <div className='d-flex gap-2'>
+                      <div className='btn btn-sm btn-warning rounded' onClick={() => crud(trainingPlan, 'edit')}>
+                        <MdEdit size={'1.25rem'} />
                       </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
+                      <div className='btn btn-sm btn-secondary rounded'>
+                        <FaRegTrashCan size={'1.25rem'} onClick={() => crud(trainingPlan, 'delete')} />
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
+          }
         </tbody>
       </table>
     </div>

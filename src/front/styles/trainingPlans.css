@@ -38,6 +38,15 @@
   transition: all 0.2s ease;
 }
 
+.innerTableForm-container-exercises {
+  margin: 0.25rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--primary);
+  max-width: 250px;
+  position: relative;
+}
+
 .innerTableForm-label {
   color: var(--light)
 }
@@ -60,4 +69,36 @@
   gap: 1rem;
   align-items: center;
   place-content: space-evenly;
+}
+
+.innerTableForm-container-exercisesDetails {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.innerTableForm-container-exercisesDetails-iconWrapper {
+  border-radius: 50%;
+  background-color: var(--primary);
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  place-content: center;
+}
+.innerTableForm-container-exercisesDetails-iconWrapper2 {
+  border-radius: 50%;
+  background-color: var(--primary);
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  place-content: center;
+  right: -15px;
+}
+
+.innerTableForm-container-exercisesDetails-iconWrapper-icon  {
+  position: absolute;
 }

@@ -4,13 +4,14 @@ import { Context } from '../../store/appContext';
 import { Input } from '../../component/Input.jsx';
 import { useNavigate } from 'react-router-dom';
 import { IoIosCloseCircleOutline } from "react-icons/io";
-
+import { FaRegEye } from "react-icons/fa";
+import { FaRegEyeSlash } from "react-icons/fa";
 export const TrainingExercises = ({ linInitialExercise, tpId, showForm, setShowForm, }) => {
   const { store, actions } = useContext(Context);
-  const [exercises, setExercises] = useState('');
-  const [series, setSeries] = useState('');
-  const [repetitions, setRepetitions] = useState('');
 
+  const [formState, setFormState] = useState({
+    exercises: []
+  })
   const navigate = useNavigate();
 
   const exercisesCollection = store?.exercisesStates?.exercises?.map((exercises) => ({
@@ -18,16 +19,43 @@ export const TrainingExercises = ({ linInitialExercise, tpId, showForm, setShowF
     value: exercises.id
   }));
 
+  const onExerciseSelect = (selectedExercises) => {
+    const updateExercises = selectedExercises.map((exe) => {
+      const existingExercise = formState.exercises.find(e => e.exercise_id === exe.value)
+      return {
+        ...exe,
+        exercise_id: exe.value,
+        name: exe.label,
+        series: existingExercise?.series || "",
+        repetitions: existingExercise?.repetitions || "",
+      }
+    })
+
+    setFormState((prevState) => ({
+      ...prevState,
+      exercises: updateExercises
+    }))
+  }
+
+  const onExerciseChange = (exerciseId, key, value) => {
+    setFormState((prevState) => ({
+      ...prevState,
+      exercises: prevState.exercises.map((exe) => exe.value === exerciseId ? { ...exe, [key]: value } : exe)
+    }))
+  }
+
+  // onSubmit
   const addExercises = async (e) => {
     e.preventDefault();
-    const formData = {
+    const exercisesData = formState.exercises.map((exe) => ({
       training_plan_id: tpId,
-      exercise_id: exercises,
-      repetitions: repetitions,
-      series: series
-    };
+      exercise_id: exe.exercise_id,
+      repetitions: exe.repetitions,
+      series: exe.series
+    }))
 
-    await actions.setTrainingPlanExercises(formData, navigate);
+
+    await actions.setTrainingPlanExercises(exercisesData, navigate);
     setShowForm(false);
   };
 
@@ -41,26 +69,29 @@ export const TrainingExercises = ({ linInitialExercise, tpId, showForm, setShowF
           <label htmlFor={'Exercises'} className='form-label innerTableForm-label'>
             Ejercicios
           </label>
-          <Select options={exercisesCollection} onChange={(data) => setExercises(data.value)} />
+          <Select isMulti options={exercisesCollection} onChange={onExerciseSelect} />
         </div>
-        {Boolean(exercises) && linInitialExercise === tpId ? (
-          <>
-            <Input
-              label='Series'
-              id='series'
-              value={series}
-              onChange={(e) => setSeries(e.target.value)}
-              type={'text'}
-            />
-            <Input
-              label='Repetition'
-              id='Repetition'
-              value={repetitions}
-              onChange={(e) => setRepetitions(e.target.value)}
-              type={'text'}
-            />
-          </>
-        ) : null}
+        {formState.exercises.map((exe) => (
+          <div key={exe.exercise_id} className='createFormSeriesRepetitionsContainer'>
+            <div className='p-2 fs-6 mt-2 badge rounded bg-secondary'>{exe.name}</div>
+            <div className='d-flex gap-1'>
+              <Input
+                label="Series"
+                id={`series-${exe.exercise_id}`}
+                value={exe.series}
+                onChange={(e) => onExerciseChange(exe.exercise_id, "series", e.target.value)}
+                type={"number"}
+              />
+              <Input
+                label="Repetitions"
+                id={`repetitions-${exe.exercise_id}`}
+                value={exe.repetitions}
+                onChange={(e) => onExerciseChange(exe.exercise_id, "repetitions", e.target.value)}
+                type={"number"}
+              />
+            </div>
+          </div>
+        ))}
         <button className='btn btn-warning w-100'>Actualizar</button>
       </form>
     );
@@ -68,34 +99,57 @@ export const TrainingExercises = ({ linInitialExercise, tpId, showForm, setShowF
   return null;
 };
 
-export const AddTrainingExercises = ({ linkedExercises, onClick, updateExercise, showUpdateButton, showForm }) => {
+export const AddTrainingExercises = ({ trainingPlan, onClick,/*  updateExercise, showUpdateButton, */ showForm }) => {
+  const [showExercisesDetails, setShowExercisesDetails] = useState(false)
+
   const { store } = useContext(Context);
   const { exercisesStates } = store
-  const { exercises } = exercisesStates
+  const { exercises, trainingPlanExercises } = exercisesStates
 
-  const foundExercise =
-    linkedExercises?.length > 0
-      ? exercises.find((exe) => exe.id === linkedExercises[0].exercise_id)
-      : null;
+  const linkedExercises = trainingPlanExercises?.filter(
+    (exercise) => exercise.training_plan_id === trainingPlan?.id
+  );
 
   return (
     <>
+      {/* {linkedExercises?.length > 0 && (
+        <div>
+          <FaEye onClick={() => setShowExercisesDetails((prev) => !prev)} />
+        </div>
+
+      )} */}
       {linkedExercises?.length > 0 ? (
         <>
-          {linkedExercises?.map((exercise, index) => (
-            <div key={index}>
-              {showUpdateButton && <button className='btn btn-secondary btn-sm' onClick={updateExercise}>Actualizar</button>}
-              <div><b>Exercise Name:</b> {foundExercise?.name}</div>
-              <div><b>Series:</b> {exercise?.series}</div>
-              <div><b>Repetitions:</b> {exercise?.repetitions}</div>
+          {!showExercisesDetails ? (
+            <div className='innerTableForm-container-exercisesDetails'>
+              <div>{linkedExercises.length} Exercises</div>
+              <div className='innerTableForm-container-exercisesDetails-iconWrapper' onClick={() => setShowExercisesDetails((prev) => !prev)}>
+                <FaRegEye />
+              </div>
             </div>
-          ))}
+          ) : linkedExercises?.map((exercise, index) => {
+            const exerciseDetails = exercises.find(exe => exe.id === exercise.exercise_id)
+            const exerciseName = exerciseDetails ? exerciseDetails.name : "unk"
+            return (
+              <div key={index} className={"innerTableForm-container-exercises"}>
+                <div className='innerTableForm-container-exercisesDetails-iconWrapper2' onClick={() => setShowExercisesDetails(false)}>
+                  <div className='innerTableForm-container-exercisesDetails-iconWrapper-icon'>
+                    <FaRegEyeSlash className='algo' />
+
+                  </div>
+                </div>
+                <div><b>Exercise Name: </b>{exerciseName}</div>
+                <div><b>Series:</b> {exercise?.series}</div>
+                <div><b>Repetitions:</b> {exercise?.repetitions}</div>
+              </div>
+            )
+          })}
         </>
-      ) : (
+      ) : linkedExercises?.length < 1 ? (
         <span className={`innerTableForm-initialMessage-${showForm ? "open" : "close"}`} onClick={onClick}>
           {!!showForm ? "Pick an exercise" : "Add Exercise"}
         </span>
-      )}
+      ) : null}
     </>
   );
 };
