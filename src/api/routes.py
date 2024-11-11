@@ -20,6 +20,12 @@ def handle_hello():
     response_body = {}
     response_body['message'] = "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"
     return response_body, 200
+
+@api.route('/validate-token', methods=['GET'])
+@jwt_required()
+def validate_token():
+    user_id = get_jwt_identity()
+    return jsonify({"message": "Valid Token", "user_id": user_id}), 200
  
 
 @api.route("/login", methods=["POST"])
@@ -152,7 +158,7 @@ def sessions():
     response_body = {}
     current_user = get_jwt_identity()
     if request.method == 'GET':
-        rows = db.session.execute(db.select(Sessions)).scalars()
+        rows = db.session.execute(db.select(Sessions).join(TrainingPlans).where(TrainingPlans.user_id == current_user['user_id'])).scalars()
 
         result = [row.serialize() for row in rows]    
         response_body['message'] = 'Listado de Sesiones'
@@ -270,6 +276,7 @@ def training_exercises():
 def initial_setup():
     response_body = {}
     current_user = get_jwt_identity()
+    print(current_user)
     if not current_user["is_admin"]: 
         response_body["message"] = "Unauthorized"
         return response_body, 401
@@ -280,12 +287,13 @@ def initial_setup():
         data = response.json()
         response_body["muscles"] = data["results"]
         for row in data["results"]:
-            item = Muscles(name=row['name'],
-                           name_en=row['name_en'],
-                           id=row['id'],
-                           is_front=row['is_front'],
-                           image_url_main=row['image_url_main'],
-                           image_url_secondary=row['image_url_secondary'])
+            item = Muscles(
+                        id=row['id'],
+                        name=row['name'],
+                        name_en=row['name_en'],
+                        is_front=row['is_front'],
+                        image_url_main=row['image_url_main'],
+                        image_url_secondary=row['image_url_secondary'])
             db.session.add(item)
             db.session.commit()    
     # Category: wger.de
@@ -305,13 +313,23 @@ def initial_setup():
     if response.status_code == 200:
         data = response.json()
         response_body["exercises"] = data["results"]
+
         for row in data["results"]:
-            item = Exercises(id=row['id'],
-                             name=row['name'],
-                             description=row['description'],
-                             muscle='muscles',
-                             exercise_base=row['exercise_base'],
-                             category_id=row['category'])
+            muscle_id = row['muscles'][0] if row['muscles'] else None
+
+            if muscle_id:
+                muscle = db.session.query(Muscles).filter_by(id=muscle_id).first()
+                if not muscle:
+                    continue  # Si el musculo no existe, omitir este ejercicio
+            
+            item = Exercises(
+                id=row['id'],
+                name=row['name'],
+                description=row['description'],
+                muscle_id=muscle_id,
+                exercise_base=row['exercise_base'],
+                category_id=row['category']
+            )
             db.session.add(item)
             db.session.commit()  
 
@@ -319,3 +337,16 @@ def initial_setup():
     return response_body, 200 
 
 
+@api.route('/muscles', methods=['GET'])
+@jwt_required()
+def muscles():
+    response_body = {}
+
+    rows = db.session.execute(db.select(Muscles)).scalars()
+
+    result = [row.serialize() for row in rows]
+
+    response_body['message'] = 'Listado de musculos'
+    response_body['results'] = result
+
+    return jsonify(response_body), 200

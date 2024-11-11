@@ -17,8 +17,9 @@ export const TrainingPlans = () => {
   const [showForm, setShowForm] = useState(false);
 
   const { store, actions } = useContext(Context);
-  const { trainingPlansStates } = store;
-  const { trainingPlans, isTrainingPlansLoading, filter, currentTrainingPlan } = trainingPlansStates;
+  const { trainingPlansStates, exercisesStates } = store;
+  const { trainingPlans, isTrainingPlansLoading, filter } = trainingPlansStates;
+  const { isExercisesLoading } = exercisesStates
   const [filteredPlans, setFilteredPlans] = useState(() => trainingPlans);
   const navigate = useNavigate();
 
@@ -89,7 +90,7 @@ export const TrainingPlans = () => {
 
   useEffect(() => handleFilter(), [filter]);
 
-  if (isTrainingPlansLoading) {
+  if (isTrainingPlansLoading && isExercisesLoading) {
     return (
       <div className={'container mt-2'}>
         <h1 style={{ color: 'yellow' }}>Loader de Tabla</h1>
@@ -146,7 +147,7 @@ export const TrainingPlans = () => {
                   <td>{formatDate(trainingPlan?.finalization_date)}</td>
                   <td>{trainingPlan?.quantity_session}</td>
                   <td>{trainingPlan?.level}</td>
-                  <td>
+                  <td style={{ position: "relative" }}>
                     <AddTrainingExercises
                       trainingPlan={trainingPlan}
                       onClick={() => linkInitialExercise(trainingPlan.id)}
@@ -162,11 +163,13 @@ export const TrainingPlans = () => {
                   </td>
                   <td>
                     <div className='d-flex gap-2'>
-                      <div className='btn btn-sm btn-warning rounded' onClick={() => crud(trainingPlan, 'edit')}>
-                        <MdEdit size={'1.25rem'} />
+                      <div className='btn btn-sm btn-warning rounded' onClick={() => crud(trainingPlan, 'edit')} style={{
+                        padding: "0.25rem 0.5rem", fontSize: ".75rem"
+                      }}>
+                        <MdEdit size={'1.125rem'} />
                       </div>
                       <div className='btn btn-sm btn-secondary rounded'>
-                        <FaRegTrashCan size={'1.25rem'} onClick={() => crud(trainingPlan, 'delete')} />
+                        <FaRegTrashCan size={'1.125rem'} onClick={() => crud(trainingPlan, 'delete')} />
                       </div>
                     </div>
                   </td>

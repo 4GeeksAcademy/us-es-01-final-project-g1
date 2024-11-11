@@ -6,6 +6,7 @@ import { Context } from '../../store/appContext.js'
 
 export const Exercises = () => {
   const { store, actions } = useContext(Context)
+  console.log("🚀 ~ Exercises ~ store:", store)
   const { exercisesStates, } = store
   const navigate = useNavigate()
 
@@ -25,7 +26,7 @@ export const Exercises = () => {
             return (
               <tr>
                 <td>{exercise.name}</td>
-                <td>{exercise.category_id}</td>
+                <td>{exercise.category_name}</td>
                 <td>{exercise.muscle}</td>
                 <td>{exercise.description}</td>
               </tr>
@@ -46,3 +47,5 @@ export const Exercises = () => {
 //   "muscle": "muscles",
 //   "name": "Abdominales HD"
 // },
+
+// /static/images/muscles/main/muscle-2.svg

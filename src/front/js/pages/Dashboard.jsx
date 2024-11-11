@@ -11,19 +11,10 @@ import "../../styles/dashboard.css"
 
 //--> esto para nosotros es un un pseudo home! o nuestra pagina principal
 export const Dashboard = () => {
-  const { store, actions } = useContext(Context)
-  const authToken = localStorage.getItem("token")
-  const user = localStorage.getItem("user")
-  const navigate = useNavigate()
+  const { store, } = useContext(Context)
   const { detailsPlanLevelDetails } = useItems()
 
 
-  useEffect(() => {
-    // if (!store.isLogin) {
-    //   console.log("AQUI DEBERIA NAVEGAR AL LOGIN Y NO LO HACE")
-    //   navigate("/")
-    // }
-  }, []);
 
   return (
     <main className='dashboard-container'>
@@ -57,12 +48,13 @@ export const Dashboard = () => {
         <div className="row">
           <div className='col-12 col-sm-12 col-md-6 col-lg-6'>
             {store.sessionsStates.isSessionsLoading ? <Loader /> : store?.sessionsStates?.sessions?.length ? (
-              <CardInfo title={"Sesions"} subtitle={"Best Sessions bound to the training plan"} description={"some description"} model={"sessions"} setupItems={{}} />
+              <CardInfo title={"Sesions"} subtitle={"All Sessions here!"} description={"improve your sessions here"} model={"sessions"} setupItems={{}} />
             ) : (<CreateCard model={"sessions"} />)}
           </div>
           <div className='col-12 col-sm-12 col-md-6 col-lg-6'>
-            {/* <CardInfo title={"titulo modelo3"} subtitle={"algun mensaje motivador4"} description={"algun mensaje"} /> */}
-            <CreateCard />
+            {store.sessionsStates.isSessionsLoading ? <Loader /> : store?.sessionsStates?.sessions?.length ? (
+              <CardInfo title={"Muscles"} subtitle={"Muscles details"} description={"View a guidance of the muscles"} model={"muscles"} setupItems={{}} />
+            ) : (<CreateCard model={"muscles"} />)}
           </div>
         </div>
       </div>

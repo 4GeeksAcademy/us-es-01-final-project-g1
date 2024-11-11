@@ -114,10 +114,23 @@
   display: flex;
   align-items: center;
   place-content: center;
-  right: 171px;
+  right: -13px;
   z-index: 1;
+  top: -9px;
 }
 
 .innerTableForm-container-exercisesDetails-iconWrapper-icon {
   position: absolute;
+}
+
+
+
+.trainingExercises-exercises-details {
+  border-bottom: 1px solid var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.trainingExercises-exercises-details:last-child {
+  border-bottom: none;
+  margin: 0
 }

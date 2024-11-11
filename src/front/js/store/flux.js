@@ -2,9 +2,9 @@ const initialState = {
 	message: null,
 	isLogin: false,
 	user: {},
-	isAdmin: false,
 	errorMessage: null,
 	isLoginLoading: false,
+	hasFetchedData: false, // Nueva bandera para controlar las peticiones
 	trainingPlansStates: {
 		trainingPlans: [],
 		isTrainingPlansLoading: false,
@@ -20,14 +20,24 @@ const initialState = {
 		trainingPlanExercises: [],
 		isExercisesLoading: false,
 		exercises: []
+	},
+	musclesStates: {
+		isMusclesLoading: false,
+		muscles: []
 	}
 }
 
-const fetchData = async ({ uri, method = "GET", authToken = null, body = null }) => {
+const fetchData = async ({ endpoint, method = "GET", authToken = true, body = null }) => {
 	const headers = {
 		"Content-Type": "application/json",
 	};
-	if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
+	if (authToken) {
+		const token = localStorage.getItem("token");
+		if (token) headers["Authorization"] = `Bearer ${token}`;
+	}
+
+	const url = `${process.env.BACKEND_URL}/api/${endpoint}`
 
 	const options = {
 		method,
@@ -36,7 +46,7 @@ const fetchData = async ({ uri, method = "GET", authToken = null, body = null })
 	};
 
 	try {
-		const response = await fetch(uri, options);
+		const response = await fetch(url, options);
 		const data = await response.json();
 		if (!response.ok) {
 			return { error: data.message || "An error occurred", data: null };
@@ -46,6 +56,12 @@ const fetchData = async ({ uri, method = "GET", authToken = null, body = null })
 		return { error: "Network error", data: null };
 	}
 };
+
+const validateToken = async () => {
+	const { error } = await fetchData({ endpoint: "validate-token" });
+	return !error;
+};
+
 
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
@@ -59,17 +75,15 @@ const getState = ({ getStore, getActions, setStore }) => {
 			},
 			login: async (formData, navigate) => {
 				setStore({ errorMessage: null, isLoginLoading: true });
-				const { error, data } = await fetchData({
-					uri: `${process.env.BACKEND_URL}/api/login`,
-					method: "POST",
-					body: formData,
-				});
-				if (error) setStore({ message: error, errorMessage: error, isLoginLoading: false, });
+				const { error, data } = await fetchData({ endpoint: "login", method: "POST", authToken: false, body: formData, });
+				if (error) {
+					setStore({ message: error, errorMessage: error, isLoginLoading: false });
+					return;
+				}
 				localStorage.setItem("token", data.access_token);
 				localStorage.setItem("user", JSON.stringify(data.results));
 				setStore({
 					isLogin: true,
-					isAdmin: data?.results?.is_admin,
 					user: data?.results,
 					message: data.message,
 					isLoginLoading: false,
@@ -79,36 +93,54 @@ const getState = ({ getStore, getActions, setStore }) => {
 			logout: () => {
 				localStorage.removeItem("token");
 				localStorage.removeItem("user");
-				setStore({ isLogin: false, isAdmin: false, user: {}, message: null, errorMessage: null, });
+				setStore({
+					isLogin: false,
+					user: {},
+					message: null,
+					errorMessage: null,
+					hasFetchedData: false
+				});
 			},
-			isLogin: () => {
+			isLogin: async () => {
 				const authToken = localStorage.getItem("token")
 				const user = localStorage.getItem("user")
-
 				if (authToken && user) {
-					setStore({ ...getStore(), isLogin: true, user: JSON.parse(user) });
-					getActions().getTrainingPlans();
-					getActions().getSessions();
-					getActions().getExercises();
-					getActions().getTrainingPlanExercises();
+					const isValidToken = await validateToken();
+					if (isValidToken) {
+						setStore({
+							...getStore(),
+							isLogin: true,
+							user: JSON.parse(user),
+							hasFetchedData: true
+						});
+
+						getActions().getTrainingPlanExercises();
+						getActions().getTrainingPlans();
+						getActions().getMuscles();
+						getActions().getSessions();
+						getActions().getExercises();
+
+					} else {
+						console.warn("Token no válido. Por favor, vuelve a iniciar sesión.");
+						setStore({ isLogin: false, user: {}, message: "Tu sesión ha caducado." });
+					}
+
 				} else {
-					setStore({ isLogin: false, user: {}, isAdmin: false });
+					setStore({ isLogin: false, user: {} });
 				}
 
 			},
 			register: async (formData, navigate) => {
 				setStore({ errorMessage: null, isLoginLoading: true });
-				const { error, data } = await fetchData({
-					uri: `${process.env.BACKEND_URL}/api/register`,
-					method: "POST",
-					body: formData,
-				});
-				if (error) setStore({ errorMessage: error, message: error, isLoginLoading: false });
+				const { error, data } = await fetchData({ endpoint: "register", method: "POST", authToken: false, body: formData, });
+				if (error) {
+					setStore({ errorMessage: error, message: error, isLoginLoading: false });
+					return;
+				}
 				localStorage.setItem("token", data.access_token);
 				localStorage.setItem("user", JSON.stringify(data.results));
 				setStore({
 					isLogin: true,
-					isAdmin: data.results.is_admin,
 					user: data.results,
 					message: data.message,
 					isLoginLoading: false,
@@ -117,28 +149,18 @@ const getState = ({ getStore, getActions, setStore }) => {
 			},
 			// trainingPlans
 			getTrainingPlans: async () => {
-				const uri = `${process.env.BACKEND_URL}/api/training-plans`
-				const authToken = localStorage.getItem("token")
-				const options = {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: ` Bearer ${authToken}`
-					}
-				}
 				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: true } })
-				const response = await fetch(uri, options)
-				const trainingPlans = await response.json()
-				if (!response.ok) {
-					setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: false } })
-					return
+				const { error, data } = await fetchData({ endpoint: "training-plans", method: "GET" });
+				if (error) {
+					setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: false } });
+					return;
 				}
 				setStore({
 					...getStore(),
 					trainingPlansStates: {
 						...getStore().trainingPlansStates,
-						trainingPlansCount: trainingPlans.results.length,
-						trainingPlans: trainingPlans.results,
+						trainingPlansCount: data.results.length,
+						trainingPlans: data.results,
 						isTrainingPlansLoading: false
 					}
 				})
@@ -195,124 +217,80 @@ const getState = ({ getStore, getActions, setStore }) => {
 			},
 			//Sessions
 			getSessions: async () => {
-				const uri = `${process.env.BACKEND_URL}/api/sessions`
-				const authToken = localStorage.getItem("token")
-				const options = {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: ` Bearer ${authToken}`
-					}
-				}
-				setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: true } })
-				const response = await fetch(uri, options)
-				const sessions = await response.json()
-				console.log("🚀 ~ getSessions: ~ sessions:", sessions)
-				if (!response.ok) {
-					setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: false } })
+				setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: true } });
+				const { error, data } = await fetchData({ endpoint: "sessions", method: "GET" });
+				if (error) {
+					setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: false } });
+					return;
 				}
 				setStore({
 					...getStore(),
 					sessionsStates: {
 						...getStore().sessionsStates,
-						sessions: [...sessions.results],
+						sessions: data.results,
 						isSessionsLoading: false
 					}
-				})
-
+				});
 			},
 			createSessions: async ({ formData, navigate, }) => {
-				const uri = `${process.env.BACKEND_URL}/api/sessions`
-				const authToken = localStorage.getItem("token")
-				const options = {
-					method: "POST",
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: ` Bearer ${authToken}`
-					},
-					body: JSON.stringify(formData),
-				}
-				setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: true } })
-				const response = await fetch(uri, options)
-				const data = await response.json()
-				if (!response.ok) {
-					return setStore({
+				setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: true } });
+				const { error, data } = await fetchData({ endpoint: "sessions", method: "POST", body: formData });
+				if (error) {
+					setStore({
 						...getStore(),
 						errorMessage: data.message,
 						message: data.message,
 						sessionsStates: {
 							isSessionsLoading: false
 						}
-					})
+					});
+					return;
 				}
+				setStore({ ...getStore(), message: data.message, });
 
-				setStore({
-					...getStore(),
-					message: data.message,
-				})
-				getActions().getSessions()
-				setStore({
-					...getStore(),
-					sessionsStates: {
-						...getStore().sessionsStates,
-						isSessionsLoading: true
-					}
-				})
-				navigate("/sessions")
-				return response
+				await getActions().getSessions();
+				navigate("/sessions");
+
 			},
-			setTrainingPlanExercises: async (formData, navigate, update) => {
-				const uri = `${process.env.BACKEND_URL}/api/training-exercises`
-				const authToken = localStorage.getItem("token")
-
-				const options = {
-					method: update ? 'PUT' : 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: ` Bearer ${authToken}`
-					},
-					body: JSON.stringify(formData),
+			setTrainingPlanExercises: async (formData, navigate,) => {
+				setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: true } });
+				const { error, data } = await fetchData({ endpoint: "training-exercises", method: "POST", body: formData });
+				if (error) {
+					setStore({
+						...getStore(),
+						errorMessage: error,
+						message: error,
+						exercisesStates: {
+							...getStore().exercisesStates,
+							isExercisesLoading: false
+						}
+					});
+					return;
 				}
-				const response = await fetch(uri, options)
-				const data = await response.json()
 
-				if (!response.ok) {
-					return setStore({ errorMessage: data.message, message: data.message, })
-				}
-				getActions().getTrainingPlans()
-				getActions().getTrainingPlanExercises()
-				navigate("/training-plan")
-				return response
+				setStore({ ...getStore(), message: data.message });
+
+				await getActions().getTrainingPlanExercises();
+				await getActions().getTrainingPlans();
+				navigate("/training-plan");
 			},
 			//Exercises
 			getTrainingPlanExercises: async () => {
-				const uri = `${process.env.BACKEND_URL}/api/training-exercises`
-				const authToken = localStorage.getItem("token")
-				const options = {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: ` Bearer ${authToken}`
-					}
-				}
-				// setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: true } })
-				const response = await fetch(uri, options)
-				const exercises = await response.json()
-				if (!response.ok) {
-					// setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: false } })
-					return
-				}
+				setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: true } });
+				const { error, data } = await fetchData({ endpoint: "training-exercises", method: "GET" });
 
-
+				if (error) {
+					setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: false } });
+					return;
+				}
 				setStore({
 					...getStore(),
 					exercisesStates: {
 						...getStore().exercisesStates,
-						trainingPlanExercises: exercises.results,
-						// isExercisesLoading: false
+						trainingPlanExercises: data.results,
+						isExercisesLoading: false
 					}
-				})
-
+				});
 			},
 			setLinkedTPE: (tpe) => {
 				setStore({
@@ -325,58 +303,40 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 			},
 			getExercises: async () => {
-				const uri = `${process.env.BACKEND_URL}/api/exercises`
-				const authToken = localStorage.getItem("token")
-				const options = {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: ` Bearer ${authToken}`
-					}
-				}
-				setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: true } })
-				const response = await fetch(uri, options)
-				const exercises = await response.json()
-				if (!response.ok) {
-					setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: false } })
-					return
+				setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: true } });
+				const { error, data } = await fetchData({ endpoint: "exercises", method: "GET" });
+
+				if (error) {
+					setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: false } });
+					return;
 				}
 				setStore({
 					...getStore(),
 					exercisesStates: {
 						...getStore().exercisesStates,
-						exercises: exercises.results,
+						exercises: data.results,
 						isExercisesLoading: false
 					}
-				})
+				});
 
 			},
-			getInitial: async () => {
-				const uri = `${process.env.BACKEND_URL}/api/initial-setup`
-				const authToken = localStorage.getItem("token")
-				const options = {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: ` Bearer ${authToken}`
-					}
+			getMuscles: async () => {
+				console.log("entre en mi request de muscles")
+				setStore({ ...getStore(), musclesStates: { ...getStore(), musclesStates: { ...getStore().musclesStates, isMusclesLoading: true } } });
+				const { error, data } = await fetchData({ endpoint: "muscles", method: "GET" });
+
+				if (error) {
+					setStore({ ...getStore(), musclesStates: { ...getStore().musclesStates, isMusclesLoading: false } });
+					return;
 				}
-				setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: true } })
-				const response = await fetch(uri, options)
-				const test = await response.json()
-				console.log("test", test)
-				// if (!response.ok) {
-				// 	setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: false } })
-				// 	return
-				// }
-				// setStore({
-				// 	...getStore(),
-				// 	exercisesStates: {
-				// 		...getStore().exercisesStates,
-				// 		exercises: exercises.results,
-				// 		isExercisesLoading: false
-				// 	}
-				// })
+				setStore({
+					...getStore(),
+					musclesStates: {
+						// ...getStore().musclesStates,
+						muscles: data.results,
+						isMusclesLoading: false
+					}
+				});
 
 			},
 		}
