@@ -5,14 +5,12 @@ import { CreateCard } from '../component/CreateCard.jsx'
 import { CardInfo } from '../component/CardInfo.jsx'
 import { Loader } from '../component/Loader.jsx'
 import { Context } from '../store/appContext.js'
-import { useItems } from '../hooks/useItems.js'
 import "../../styles/dashboard.css"
 
 
 //--> esto para nosotros es un un pseudo home! o nuestra pagina principal
 export const Dashboard = () => {
   const { store, } = useContext(Context)
-  const { detailsPlanLevelDetails } = useItems()
 
 
 
@@ -36,24 +34,24 @@ export const Dashboard = () => {
         <div className="row">
           <div className='col-12 col-sm-12 col-md-6 col-lg-6'>
             {store.exercisesStates.isExercisesLoading ? <Loader /> : (
-              <CardInfo title={"Exercises"} subtitle={"Powerful exercises!"} description={"List of exercises, take a look at them and see the details."} model={"exercises"} setupItems={{}} />
+              <CardInfo title={"Exercises"} subtitle={"Powerful exercises!"} description={"List of exercises, take a look at them and see the details."} model={"exercises"} />
             )}
           </div>
           <div className='col-12 col-sm-12 col-md-6 col-lg-6'>
             {store.trainingPlansStates.isTrainingPlansLoading ? <Loader /> : store?.trainingPlansStates?.trainingPlans?.length ? (
-              <CardInfo setupItems={detailsPlanLevelDetails} model={"training_plans"} title={"Planes de Ejercicio"} subtitle={"Best Exercises"} description={"Here you can find a plan that suits your needs."} />
+              <CardInfo model={"training_plans"} title={"Planes de Ejercicio"} subtitle={"Best Exercises"} description={"Here you can find a plan that suits your needs."} />
             ) : (<CreateCard model={"training_plans"} />)}
           </div>
         </div>
         <div className="row">
           <div className='col-12 col-sm-12 col-md-6 col-lg-6'>
             {store.sessionsStates.isSessionsLoading ? <Loader /> : store?.sessionsStates?.sessions?.length ? (
-              <CardInfo title={"Sesions"} subtitle={"All Sessions here!"} description={"improve your sessions here"} model={"sessions"} setupItems={{}} />
+              <CardInfo title={"Sesions"} subtitle={"All Sessions here!"} description={"improve your sessions here"} model={"sessions"} />
             ) : (<CreateCard model={"sessions"} />)}
           </div>
           <div className='col-12 col-sm-12 col-md-6 col-lg-6'>
             {store.sessionsStates.isSessionsLoading ? <Loader /> : store?.sessionsStates?.sessions?.length ? (
-              <CardInfo title={"Muscles"} subtitle={"Muscles details"} description={"View a guidance of the muscles"} model={"muscles"} setupItems={{}} />
+              <CardInfo title={"Muscles"} subtitle={"Muscles details"} description={"View a guidance of the muscles"} model={"muscles"} />
             ) : (<CreateCard model={"muscles"} />)}
           </div>
         </div>

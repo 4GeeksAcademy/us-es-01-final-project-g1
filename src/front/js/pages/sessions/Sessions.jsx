@@ -14,7 +14,6 @@ import "../../../styles/sessions.css"
 export const Sessions = () => {
   const { store, } = useContext(Context)
   const { sessionsStates, } = store
-  console.log("🚀 ~ sessionsStates:", sessionsStates)
   const navigate = useNavigate()
 
 

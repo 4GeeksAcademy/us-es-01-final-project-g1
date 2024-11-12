@@ -1,27 +1,36 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import Swal from 'sweetalert2';
-import Select from 'react-select';
-import { Link } from 'react-router-dom';
+import { FaInfo } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import { MdEdit } from 'react-icons/md';
 import { Context } from '../../store/appContext.js';
-import '../../../styles/trainingPlans.css';
 import { BannerMessage } from '../../component/BannerMessage.jsx';
+import { Filters } from '../../component/Filters.jsx';
 import { formatDate } from '../../helper/formatDate.js';
 import { AddTrainingExercises, TrainingExercises } from './TrainingExercises.jsx';
-import { FaInfo } from 'react-icons/fa';
+import '../../../styles/trainingPlans.css';
+import { SkeletonTable } from '../../component/Loader.jsx';
 
 export const TrainingPlans = () => {
   const [linInitialExercise, setLinInitialExercise] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [filter, setFilter] = useState("");
 
   const { store, actions } = useContext(Context);
   const { trainingPlansStates, exercisesStates } = store;
-  const { trainingPlans, isTrainingPlansLoading, filter } = trainingPlansStates;
+  const { trainingPlans, isTrainingPlansLoading, } = trainingPlansStates;
   const { isExercisesLoading } = exercisesStates
-  const [filteredPlans, setFilteredPlans] = useState(() => trainingPlans);
+
   const navigate = useNavigate();
+
+  const filteredPlans = trainingPlans.filter(plan => filter ? plan.level === filter : true);
+
+  const filterOptions = [
+    { label: "Begginers", value: "begginer" },
+    { label: "Intermediate", value: "intermediate" },
+    { label: "Advanced", value: "advanced" }
+  ];
 
 
   const crud = (plan, action) => {
@@ -65,21 +74,6 @@ export const TrainingPlans = () => {
     });
   };
 
-  const handleFilter = () => {
-    if (filter === 'begginer') {
-      return setFilteredPlans(trainingPlans.filter((tp) => tp.level === 'begginer'));
-    }
-
-    if (filter === 'intermediate') {
-      return setFilteredPlans(trainingPlans.filter((tp) => tp.level === 'intermediate'));
-    }
-
-    if (filter === 'advanced') {
-      return setFilteredPlans(trainingPlans.filter((tp) => tp.level === 'advanced'));
-    }
-    return setFilteredPlans(trainingPlans);
-  };
-
   const linkInitialExercise = (id) => {
     setLinInitialExercise(id);
     setShowForm(true)
@@ -87,13 +81,10 @@ export const TrainingPlans = () => {
 
   const Message = () => <div className='infoMessage'><FaInfo /> You can add your exercises directly from the table or when creating a new training plan.</div>
 
-
-  useEffect(() => handleFilter(), [filter]);
-
   if (isTrainingPlansLoading && isExercisesLoading) {
     return (
-      <div className={'container mt-2'}>
-        <h1 style={{ color: 'yellow' }}>Loader de Tabla</h1>
+      <div className={'container mt-5'}>
+        <SkeletonTable />
       </div>
     );
   }
@@ -104,27 +95,7 @@ export const TrainingPlans = () => {
         message={<Message />}
         evaluation={true}
       />
-      <div className='trainingPlans-header-container'>
-        <div className='trainingPlans-header-filters'>
-          <button className={'btn btn-secondary'} onClick={() => actions.setTrainingPlansFilters('begginer')}>
-            Begginer
-          </button>
-          <button className={'btn btn-secondary'} onClick={() => actions.setTrainingPlansFilters('intermediate')}>
-            Intermedio
-          </button>
-          <button className={'btn btn-secondary'} onClick={() => actions.setTrainingPlansFilters('advanced')}>
-            Advanced
-          </button>
-          <button className={'btn btn-danger'} onClick={() => actions.setTrainingPlansFilters('')}>
-            Clear Filters
-          </button>
-        </div>
-        <div className={''}>
-          <Link to={'/create-plan'} className={'btn btn-warning'}>
-            Create Training Plan
-          </Link>
-        </div>
-      </div>
+      <Filters options={filterOptions} onFilterChange={setFilter} />
       <table className='table table-dark table-striped table-responsive'>
         <thead>
           <tr>

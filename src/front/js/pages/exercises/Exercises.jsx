@@ -1,17 +1,65 @@
 import React, { Children, useContext, useEffect, useState } from "react"
-import { useNavigate } from 'react-router-dom'
-import { Link } from 'react-router-dom'
 import { Context } from '../../store/appContext.js'
+import { Filters } from "../../component/Filters.jsx"
+import { SkeletonTable } from "../../component/Loader.jsx"
+import { MdZoomIn } from "react-icons/md";
+import { MdZoomOut } from "react-icons/md";
+import { CustomModal } from "../../component/CustomModal.jsx"
+import { FaRegEye } from "react-icons/fa";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 
 export const Exercises = () => {
-  const { store, actions } = useContext(Context)
-  console.log("🚀 ~ Exercises ~ store:", store)
+  const [filter, setFilter] = useState("");
+  const [viewMuscles, setViewMuscles] = useState({
+    show: false,
+    selectedMuscle: ""
+  })
+  const [zoom, setZoom] = useState(300)
+  const { store } = useContext(Context)
   const { exercisesStates, } = store
-  const navigate = useNavigate()
+  const { exercises, isExercisesLoading } = exercisesStates
+
+  const filteredExercises = exercises.filter(exe => filter ? exe.category_name === filter : true);
+
+  const filterOptions = [
+    { label: "Abs", value: "Abs" },
+    { label: "Arms", value: "Arms" },
+    { label: "Back", value: "Back" },
+    { label: "Calves", value: "Calves" },
+    { label: "Cardio", value: "Cardio" },
+    { label: "Chest", value: "Chest" },
+    { label: "Legs", value: "Legs" },
+    { label: "Shoulders", value: "Shoulders" },
+  ];
+
+  const handleViewClick = (muscle) => {
+    setViewMuscles({ selectedMuscle: muscle, show: true })
+    setZoom(300);
+  }
+
+  const handleClose = () => setViewMuscles({ selectedMuscle: "", show: false })
+
+  const handleZoomIn = () => {
+    if (zoom < 900) setZoom(prevZoom => prevZoom + 100);
+  };
+
+  const handleZoomOut = () => {
+    if (zoom > 200) setZoom(prevZoom => prevZoom - 100);
+  };
+
+  if (isExercisesLoading) {
+    return (
+      <div className={'container mt-5'}>
+        <SkeletonTable />
+      </div>
+    );
+  }
+
 
   return (
     <div className={"container mt-2"}>
+      <Filters options={filterOptions} onFilterChange={setFilter} />
       <table className="table table-dark table-striped">
         <thead>
           <tr>
@@ -22,30 +70,57 @@ export const Exercises = () => {
           </tr>
         </thead>
         <tbody>
-          {Children.toArray(exercisesStates.exercises.map((exercise) => {
+          {exercises && (Boolean(filter) ? filteredExercises : exercises).map((exercise) => {
             return (
-              <tr>
+              <tr key={exercise.id}>
                 <td>{exercise.name}</td>
+                <td dangerouslySetInnerHTML={{ __html: exercise.description }}></td>
                 <td>{exercise.category_name}</td>
-                <td>{exercise.muscle}</td>
-                <td>{exercise.description}</td>
+                <td>
+                  <div className="d-flex gap-2 align-items-center justify-content-end">
+                    <span>{exercise.muscle_name_en}</span>
+                    <button
+                      className="btn btn-sm btn-warning rounded"
+                      onClick={() => handleViewClick(exercise)}
+                    >
+                      <FaRegEye size={"1rem"} />
+                    </button>
+                  </div>
+                </td>
               </tr>
             )
-          }))}
+          })}
 
         </tbody>
       </table>
+      <CustomModal
+        show={viewMuscles.show}
+        onHide={handleClose}
+        title={viewMuscles.selectedMuscle.muscle_name_en}
+      >
+        <div className="d-flex justify-content-end gap-2" >
+          <OverlayTrigger overlay={<Tooltip id="tt-zoom-out">Zoom Out</Tooltip>}>
+            <div onClick={handleZoomOut} style={{ cursor: "pointer", userSelect: "none" }}>
+              <MdZoomOut size={"2rem"} fill={"var(--primary)"} />
+            </div>
+          </OverlayTrigger>
+          <OverlayTrigger overlay={<Tooltip id="tt-zoom-in">Zoom In</Tooltip>}>
+            <div onClick={handleZoomIn} style={{ cursor: "pointer", userSelect: "none" }}>
+              <MdZoomIn size={"2rem"} fill={"var(--primary)"} />
+            </div>
+          </OverlayTrigger>
+        </div>
+        <div className="d-flex justify-content-center">
+          <img
+            src={`${process.env.BACKEND_URL}${viewMuscles.selectedMuscle.image_url_main}`}
+            alt={viewMuscles.selectedMuscle.muscle_name_en}
+            className="img-fluid"
+            style={{ height: `${zoom}px`, transition: "height 0.3s ease" }}
+          />
+        </div>
+        <p className="mt-3">Scientific name: {viewMuscles.selectedMuscle.muscle_name}</p>
+      </CustomModal>
     </div>
   )
 }
 
-// {
-//   "category_id": 10,
-//   "description": "El movimiento crunch es uno de los ejercicios m\u00e1s b\u00e1sicos dise\u00f1ados para fortalecer los m\u00fasculos centrales del cuerpo. El ejercicio ayuda a fortalecer los m\u00fasculos centrales, mejorar la postura y aumentar la movilidad y flexibilidad muscular.\nMejora los m\u00fasculos del six pack: Cuando se realiza el ejercicio de abdominales, los m\u00fasculos rectos abdominales y oblicuos se tensan, por lo que se desarrollan los m\u00fasculos abdominales superiores y los m\u00fasculos del six pack.\nAumenta la fuerza de los m\u00fasculos abdominales: La funci\u00f3n principal de los m\u00fasculos abdominales es estabilizar la secci\u00f3n media. Te apoya mientras levantas objetos pesados, lo que te permite girar y rotar tu cuerpo. Estas son acciones de todo el d\u00eda que no notas, por lo que es importante que tus m\u00fasculos abdominales puedan soportar largas horas de trabajo. El ejercicio crunch ayuda a desarrollar esta importante resistencia en los m\u00fasculos abdominales. La resistencia muscular es la capacidad de estas fibras para resistir la resistencia durante mucho tiempo.",
-//   "exercise_base": "1319",
-//   "id": 2291,
-//   "muscle": "muscles",
-//   "name": "Abdominales HD"
-// },
-
-// /static/images/muscles/main/muscle-2.svg

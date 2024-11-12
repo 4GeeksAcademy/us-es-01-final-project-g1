@@ -1,52 +1,58 @@
-import React, { useContext, useEffect, useState } from "react"
-import { Context } from "../../store/appContext"
+import React, { useContext, useState } from "react"
+import OverlayTrigger from "react-bootstrap/OverlayTrigger"
+import Tooltip from "react-bootstrap/Tooltip"
 import { FaRegEye } from "react-icons/fa"
+import { MdZoomIn, MdZoomOut } from "react-icons/md"
+import { Context } from "../../store/appContext"
+import { SkeletonTable } from "../../component/Loader.jsx"
+import { CustomModal } from "../../component/CustomModal.jsx"
+import { Filters } from "../../component/Filters.jsx"
 
 export const Muscles = () => {
+    const [filter, setFilter] = useState(null);
+    const [viewMuscles, setViewMuscles] = useState({
+        show: false,
+        selectedMuscle: ""
+    })
+    const [zoom, setZoom] = useState(300)
+    const { store } = useContext(Context)
+    const { musclesStates } = store
+    const { muscles } = musclesStates
 
-    const { store, } = useContext(Context)
-    const [selectedMuscle, setSelectedMuscle] = useState(null);
-    const [isVisible, setIsVisible] = useState(false);
-    const [isAnimating, setIsAnimating] = useState(false);
+    const filteredMuscles = muscles.filter(muscle =>
+        filter === null ? true : muscle.is_front === filter
+    );
+    const filterOptions = [
+        { label: "Front", value: true },
+        { label: "Back", value: false },
+    ];
 
     const handleViewClick = (muscle) => {
-        setSelectedMuscle(muscle);
-        setIsVisible(true);
-        setIsAnimating(true);        //--> Activa la animación al abrir el modal
-    };
-
-    const handleCloseModal = () => {
-        setIsAnimating(false);       //--> Desactiva la animación de entrada
-        setTimeout(() => {
-            setIsVisible(false);     //--> Desmonta el modal despues de la animacien de cierre
-            setSelectedMuscle(null); //--> Limpia el musculo seleccionado
-        }, 300);
-    };
-
-
-
-
-    if (store?.musclesStates?.isMusclesLoading) {
-        return (
-            <div className="row">
-                <h1 style={{ color: "yellow" }}>Loader</h1>
-            </div>
-        );
+        setViewMuscles({ selectedMuscle: muscle, show: true })
+        setZoom(300);
     }
 
+    const handleClose = () => setViewMuscles({ selectedMuscle: "", show: false })
+
+    const handleZoomIn = () => {
+        if (zoom < 900) setZoom(prevZoom => prevZoom + 100);
+    };
+
+    const handleZoomOut = () => {
+        if (zoom > 200) setZoom(prevZoom => prevZoom - 100);
+    };
 
     if (store?.musclesStates?.isMusclesLoading) {
         return (
-            <div className="row">
-                <h1 style={{ color: "yellow" }}>Loader</h1>
-
+            <div className={'container mt-5'}>
+                <SkeletonTable />
             </div>
-
         )
     }
 
     return (
         <div className="container mt-2">
+            <Filters options={filterOptions} onFilterChange={setFilter} />
             <table className='table table-dark table-striped table-responsive'>
                 <thead>
                     <tr>
@@ -57,8 +63,8 @@ export const Muscles = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {store?.musclesStates?.muscles &&
-                        store?.musclesStates?.muscles.map((muscle, index) => {
+                    {muscles &&
+                        filteredMuscles.map((muscle, index) => {
                             return (
                                 <tr key={index}>
                                     <td>{muscle?.name}</td>
@@ -78,30 +84,35 @@ export const Muscles = () => {
                     }
                 </tbody>
             </table>
-            {/* Modal */}
-            {isVisible && (
-                <div className={`modal show d-block`} tabIndex="-1" role="dialog">
-                    <div className="modal-dialog" role="document">
-                        <div className={`modal-content ${isAnimating ? 'slide-in' : 'slide-out'}`}>
-                            <div className="modal-header">
-                                <h5 className="modal-title">{selectedMuscle.name_en}</h5>
-                                <button type="button" className="btn-close" aria-label="Close" onClick={handleCloseModal}>
-                                </button>
-                            </div>
-                            <div className="modal-body text-center">
-                                <img src={`${process.env.BACKEND_URL}${selectedMuscle.image_url_main}`} alt={selectedMuscle.name_en} className="img-fluid" />
-
-                                <p className="mt-3">Scientific name: {selectedMuscle.name}</p>
-                            </div>
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-sm btn-light" onClick={handleCloseModal}>
-                                    Close
-                                </button>
-                            </div>
+            <CustomModal
+                show={viewMuscles.show}
+                onHide={handleClose}
+                title={viewMuscles.selectedMuscle.name_en}
+            >
+                <div className="d-flex justify-content-end gap-2" >
+                    <OverlayTrigger overlay={<Tooltip id="tt-zoom-out">Zoom Out</Tooltip>}>
+                        <div onClick={handleZoomOut} style={{ cursor: "pointer", userSelect: "none" }}>
+                            <MdZoomOut size={"2rem"} fill={"var(--primary)"} />
                         </div>
-                    </div>
+                    </OverlayTrigger>
+                    <OverlayTrigger overlay={<Tooltip id="tt-zoom-in">Zoom In</Tooltip>}>
+                        <div onClick={handleZoomIn} style={{ cursor: "pointer", userSelect: "none" }}>
+                            <MdZoomIn size={"2rem"} fill={"var(--primary)"} />
+                        </div>
+                    </OverlayTrigger>
                 </div>
-            )}
+                <div className="d-flex justify-content-center">
+                    <img
+                        src={`${process.env.BACKEND_URL}${viewMuscles.selectedMuscle.image_url_main}`}
+                        alt={viewMuscles.selectedMuscle.name_en}
+                        className="img-fluid"
+                        style={{ height: `${zoom}px`, transition: "height 0.3s ease" }}
+                    />
+                </div>
+                <p className="mt-3">Scientific name: {viewMuscles.selectedMuscle.muscle_name}</p>
+            </CustomModal>
+
+
         </div>
     )
 }

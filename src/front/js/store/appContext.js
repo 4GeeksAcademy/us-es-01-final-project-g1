@@ -31,7 +31,9 @@ const injectContext = PassedComponent => {
 		  store, instead use actions, like this:
 		*/
 		useEffect(() => {
+			console.log("mount context")
 			state.actions.isLogin();
+			return () => console.log("unmount context")
 		}, []);
 
 		useEffect(() => {

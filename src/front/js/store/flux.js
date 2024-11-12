@@ -9,7 +9,6 @@ const initialState = {
 		trainingPlans: [],
 		isTrainingPlansLoading: false,
 		currentTrainingPlan: {},
-		filter: "",
 		action: ""
 	},
 	sessionsStates: {
@@ -212,9 +211,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 				navigate("/training-plan")
 				return response
 			},
-			setTrainingPlansFilters: (filter) => {
-				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, filter: filter } })
-			},
 			//Sessions
 			getSessions: async () => {
 				setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: true } });
@@ -322,7 +318,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 			},
 			getMuscles: async () => {
 				console.log("entre en mi request de muscles")
-				setStore({ ...getStore(), musclesStates: { ...getStore(), musclesStates: { ...getStore().musclesStates, isMusclesLoading: true } } });
+				setStore({ ...getStore(), musclesStates: { ...getStore().musclesStates, isMusclesLoading: true } });
 				const { error, data } = await fetchData({ endpoint: "muscles", method: "GET" });
 
 				if (error) {
