@@ -30,7 +30,7 @@ export const CreateSessions = () => {
   }
 
   return (
-    <FormLayout isLoading={store.sessionsStates.isSessionsLoading} title={"Create your Session"} onSubmit={createSession} actionText={"Create Session"}  >
+    <FormLayout isLoading={store.sessionsStates.isSessionsLoading} title={"Create your Session"} onSubmit={createSession} actionText={"Create Session"} goBackOnClick={() => navigate("/sessions")} >
       <Input label="Session Name" id="name" value={name} onChange={(e) => setName(e.target.value)} type={"text"} />
       <Input label="Date" id="date" value={date} onChange={(e) => setDate(e.target.value)} type={"date"} />
       <div className='mb-3'>

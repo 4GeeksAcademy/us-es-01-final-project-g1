@@ -11,6 +11,8 @@ import { SkeletonTable } from "../../component/Loader.jsx"
 import { CustomModal } from "../../component/CustomModal.jsx"
 import { Title } from "../../component/Title.jsx";
 import { ExpandableText } from "../../component/ExpandableText.jsx";
+import { NoRecords } from "../../component/NoRecords.jsx";
+import { Spinner } from "react-bootstrap";
 
 
 export const Exercises = () => {
@@ -24,6 +26,9 @@ export const Exercises = () => {
     show: false,
     selectedExercise: ""
   })
+
+  const [isMuscleImageLoaded, setIsMuscleImageLoaded] = useState(false);
+  const [isExerciseImageLoaded, setIsExerciseImageLoaded] = useState(false);
 
   const { store } = useContext(Context)
   const { exercisesStates, } = store
@@ -47,7 +52,11 @@ export const Exercises = () => {
     setZoom(300);
   }
 
-  const handleClose = () => setViewMuscles({ selectedMuscle: "", show: false })
+  const handleClose = () => {
+    setViewMuscles({ selectedMuscle: "", show: false })
+    setIsMuscleImageLoaded(false)
+    setIsExerciseImageLoaded(false)
+  }
 
   const openPreviewExercise = (exe) => setViewExercise({ selectedExercise: exe, show: true })
   const closePreviewExercise = () => setViewExercise({ selectedExercise: "", show: false })
@@ -74,8 +83,6 @@ export const Exercises = () => {
   return (
     <div className={"container mt-2"}>
       <Title title={"Exercises"} />
-
-
       <Filters options={filterOptions} onFilterChange={setFilter} title={"Filter by Categories"} />
       <table className="table table-dark table-striped">
         <thead>
@@ -88,7 +95,8 @@ export const Exercises = () => {
           </tr>
         </thead>
         <tbody>
-          {exercises && (Boolean(filter) ? filteredExercises : exercises).map((exercise) => {
+          {filteredExercises.length ? filteredExercises && filteredExercises.map((exercise) => {
+            // {exercises && (Boolean(filter) ? filteredExercises : exercises).map((exercise) => {
             return (
               <tr key={exercise.id}>
                 <td>{exercise.name}</td>
@@ -98,28 +106,30 @@ export const Exercises = () => {
                 <td>{exercise.category_name}</td>
                 <td style={{ minWidth: "235px" }}>
                   <div className="d-flex gap-2 align-items-center justify-content-center">
-                    <Button size={"sm"} onClick={() => handleViewClick(exercise)} variant={"warning"}>
-                      <span className="d-flex gap-1 align-items-center">
+                    <Button size={"sm"} onClick={() => handleViewClick(exercise)} variant={"info"}>
+                      <span className="d-flex gap-1 align-items-center text-nowrap">
                         <FaRegEye /> {exercise.muscle_name_en || exercise.muscle_name}
                       </span>
                     </Button>
                   </div>
                 </td>
                 <td /* style={{ minWidth: "120px" }} */ >
-                  <Button size={"sm"} onClick={() => openPreviewExercise(exercise)} variant={"warning"}>
-                    Preview
+                  <Button size={"sm"} onClick={() => openPreviewExercise(exercise)} variant={"info"}>
+                    <span className="d-flex gap-1 align-items-center text-nowrap">
+                      <FaRegEye />  Preview
+                    </span>
                   </Button>
                 </td>
               </tr>
             )
-          })}
+          }) : <NoRecords />}
 
         </tbody>
       </table>
       <CustomModal
         show={viewMuscles.show}
         onHide={handleClose}
-        title={viewMuscles.selectedMuscle.muscle_name_en}
+        title={viewMuscles.selectedMuscle.muscle_name_en || viewMuscles.selectedMuscle.muscle_name}
         size="lg"
       >
         <div className="d-flex justify-content-end gap-2" >
@@ -135,11 +145,16 @@ export const Exercises = () => {
           </OverlayTrigger>
         </div>
         <div className="d-flex justify-content-center">
+
+          {!isMuscleImageLoaded && <div style={{ width: "300px", height: "300px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Spinner animation="border" variant="warning" />
+          </div>}
           <img
             src={`${process.env.BACKEND_URL}${viewMuscles.selectedMuscle.image_url_main}`}
             alt={viewMuscles.selectedMuscle.muscle_name_en}
-            className="img-fluid"
+            className={`img-fluid ${isMuscleImageLoaded ? "" : "d-none"}`}
             style={{ height: `${zoom}px`, width: `${zoom}px`, transition: "height 0.3s ease" }}
+            onLoad={() => setIsMuscleImageLoaded(true)}
           />
         </div>
         <p className="mt-3">Scientific name: {viewMuscles.selectedMuscle.muscle_name || viewMuscles.selectedMuscle.muscle_name_en}</p>
@@ -165,11 +180,15 @@ export const Exercises = () => {
           </OverlayTrigger>
         </div>
         <div className="d-flex justify-content-center">
+          {!isExerciseImageLoaded && <div style={{ width: "300px", height: "300px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Spinner animation="border" variant="warning" />
+          </div>}
           <img
             src={`${viewExercise.selectedExercise.image_url || "https://img.freepik.com/free-vector/flat-design-no-photo-sign_23-2149259323.jpg?t=st=1731464653~exp=1731468253~hmac=3e7898b220058168ebaca9ceb62e0e757e89031b2554e9ce0871ab5d33ead005&w=900"}`}
             alt={viewExercise.selectedExercise.name}
-            className="img-fluid"
+            className={`img-fluid ${isExerciseImageLoaded ? "" : "d-none"}`}
             style={{ height: `${zoom}px`, width: `${zoom}px`, transition: "height 0.3s ease" }}
+            onLoad={() => setIsExerciseImageLoaded(true)}
           />
         </div>
       </CustomModal>

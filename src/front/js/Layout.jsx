@@ -7,9 +7,8 @@ import injectContext from "./store/appContext";
 import { Login } from "./pages/Login.jsx";
 import { Register } from "./pages/Register.jsx";
 import { Dashboard } from "./pages/Dashboard.jsx";
-import { AboutUs } from "./pages/AboutUs.jsx";
-import { ContactUs } from "./pages/ContactUs.jsx";
-import { Navbar } from "./component/Navbar.jsx";
+import { AboutUs } from "./pages/aboutus/AboutUs.jsx";
+import { CustomNavbar } from "./component/CustomNavbar.jsx";
 import { CreatePlanForm } from "./pages/trainingPlans/CreatePlanForm.jsx";
 import { UpdatePlanForm } from "./pages/trainingPlans/UpdatePlanForm.jsx";
 import { TrainingPlans } from "./pages/trainingPlans/TrainingPlans.jsx";
@@ -17,6 +16,7 @@ import { CreateSessions } from "./pages/sessions/CreateSessions.jsx";
 import { Sessions } from "./pages/sessions/Sessions.jsx";
 import { Exercises } from "./pages/exercises/Exercises.jsx";
 import { Muscles } from "./pages/muscles/Muscles.jsx";
+import { HowItWorks } from "./pages/howitworks/HowItWorks.jsx";
 
 
 // Create your first component
@@ -27,13 +27,13 @@ const Layout = () => {
 
     return (
         <BrowserRouter basename={basename}>
-            <Navbar />
+            <CustomNavbar />
             <Routes>
                 <Route element={<Login />} path="/" />
                 <Route element={<Dashboard />} path="/dashboard" />
                 <Route element={<Register />} path="/register" />
                 <Route element={<AboutUs />} path="/about-us" />
-                <Route element={<ContactUs />} path="/contact-us" />
+                <Route element={<HowItWorks />} path="/how-it-works" />
                 <Route element={<CreatePlanForm />} path="/create-plan" />
                 <Route element={<UpdatePlanForm />} path="/update-plan" />
                 <Route element={<TrainingPlans />} path="/training-plan" />

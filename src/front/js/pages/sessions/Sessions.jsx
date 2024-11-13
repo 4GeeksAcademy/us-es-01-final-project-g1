@@ -12,7 +12,7 @@ import { Title } from "../../component/Title.jsx";
 import { Filters } from "../../component/Filters.jsx";
 import { CustomModal } from "../../component/CustomModal.jsx";
 import { NoRecords } from "../../component/NoRecords.jsx";
-import "../../../styles/sessions.css"
+import "./sessions.css"
 
 export const Sessions = () => {
   const [filter, setFilter] = useState("");
@@ -143,9 +143,9 @@ export const Sessions = () => {
     <div className={"container mt-2"}>
       <Title title={"Sessions"}>
         <div className="sessions-header-container">
-          <Link to={"/create-sessions"} className={"btn btn-warning"}>
+          <Button as={Link} to={"/create-sessions"} variant={"info"}>
             Create a Session
-          </Link>
+          </Button>
         </div>
       </Title>
 
@@ -190,15 +190,10 @@ export const Sessions = () => {
                 </td>
                 <td className="text-center">
                   <OverlayTrigger overlay={<Tooltip id="update-exercises">Update Exercises</Tooltip>}>
-                    <Button variant="warning" size={"sm"} onClick={() => openModal(session)} >
+                    <Button variant="info" size={"sm"} onClick={() => openModal(session)} >
                       <CgGym />
                     </Button>
                   </OverlayTrigger>
-                  {/* <div className='btn btn-sm btn-warning rounded' onClick={() => openModal(session)} style={{
-                    padding: "0.25rem 0.5rem", fontSize: ".75rem"
-                  }}>
-                    <RxUpdate size={'1.125rem'} />
-                  </div> */}
                 </td>
               </tr>
             )
@@ -215,7 +210,7 @@ export const Sessions = () => {
           title={`Update Progress for ${selectedSession.name}`}
           footerButtons={[
             { label: "Close", onClick: closeModal },
-            { label: "Save Changes", variant: "warning", onClick: handleSaveChanges }
+            { label: "Save Changes", variant: "primary", onClick: handleSaveChanges }
           ]}
         >
           <div>

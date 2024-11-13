@@ -10,7 +10,7 @@ import { CustomModal } from "../../component/CustomModal.jsx"
 import { Filters } from "../../component/Filters.jsx"
 import { Title } from "../../component/Title.jsx"
 import { NoRecords } from "../../component/NoRecords.jsx"
-import "../../../styles/trainingPlans.css"
+import { Spinner } from "react-bootstrap"
 
 export const Muscles = () => {
     const [filter, setFilter] = useState(null);
@@ -19,6 +19,8 @@ export const Muscles = () => {
         selectedMuscle: ""
     })
     const [zoom, setZoom] = useState(300)
+    const [isMuscleImageLoaded, setIsMuscleImageLoaded] = useState(false);
+
     const { store } = useContext(Context)
     const { musclesStates } = store
     const { muscles } = musclesStates
@@ -36,7 +38,10 @@ export const Muscles = () => {
         setZoom(300);
     }
 
-    const handleClose = () => setViewMuscles({ selectedMuscle: "", show: false })
+    const handleClose = () => {
+        setViewMuscles({ selectedMuscle: "", show: false })
+        setIsMuscleImageLoaded(false)
+    }
 
     const handleZoomIn = () => {
         if (zoom < 900) setZoom(prevZoom => prevZoom + 100);
@@ -76,7 +81,7 @@ export const Muscles = () => {
                                     <td>{muscle?.name_en}</td>
                                     <td>{muscle?.is_front ? "Is front muscle" : "is back muscle"}</td>
                                     <td>
-                                        <Button size={"sm"} onClick={() => handleViewClick(muscle)} variant="warning">
+                                        <Button size={"sm"} onClick={() => handleViewClick(muscle)} variant="info">
                                             <span className="d-flex gap-1 align-items-center">
                                                 <FaRegEye /> Preview
                                             </span>
@@ -106,11 +111,15 @@ export const Muscles = () => {
                     </OverlayTrigger>
                 </div>
                 <div className="d-flex justify-content-center">
+                    {!isMuscleImageLoaded && <div style={{ width: "300px", height: "300px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Spinner animation="border" variant="warning" />
+                    </div>}
                     <img
                         src={`${process.env.BACKEND_URL}${viewMuscles.selectedMuscle.image_url_main}`}
                         alt={viewMuscles.selectedMuscle.name_en}
-                        className="img-fluid"
+                        className={`img-fluid ${isMuscleImageLoaded ? "" : "d-none"}`}
                         style={{ height: `${zoom}px`, transition: "height 0.3s ease" }}
+                        onLoad={() => setIsMuscleImageLoaded(true)}
                     />
                 </div>
                 <p className="mt-3">Scientific name: {viewMuscles.selectedMuscle.name || viewMuscles.selectedMuscle.name_en}</p>

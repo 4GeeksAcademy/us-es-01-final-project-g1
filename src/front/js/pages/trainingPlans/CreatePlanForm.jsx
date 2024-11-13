@@ -5,6 +5,7 @@ import { FormLayout } from '../../component/FormLayout.jsx';
 import { Input } from '../../component/Input.jsx';
 import { Context } from '../../store/appContext.js';
 import { useLevelOptions } from '../../hooks/useLevelOptions.js';
+import { Badge, Col, Row } from 'react-bootstrap';
 
 export const CreatePlanForm = () => {
     const navigate = useNavigate("");
@@ -73,7 +74,14 @@ export const CreatePlanForm = () => {
     };
 
     return (
-        <FormLayout isLoading={store.trainingPlansStates.isTrainingPlansLoading} title={"Create your Exercise Plan"} onSubmit={createPlan} actionText={"Create Plan"} customWidth={"700px"} goBackOnClick={() => navigate("/training-plan")}>
+        <FormLayout
+            isLoading={store.trainingPlansStates.isTrainingPlansLoading}
+            title={"Create your Exercise Plan"}
+            onSubmit={createPlan}
+            actionText={"Create Plan"}
+            customWidth={"700px"}
+            goBackOnClick={() => navigate("/training-plan")}
+        >
             <div className="row">
                 <div className="col-6">
                     <Input label="Name" id="name" value={formState.name} onChange={(e) => onChange("name", e.target.value)} type={"text"} />
@@ -107,13 +115,15 @@ export const CreatePlanForm = () => {
             {formState.exercises.length ? (
                 <>
                     {formState.exercises.map((exe) => (
-                        <div className='createFormSeriesRepetitionsContainer' key={exe.value}>
-                            <div className='p-2 fs-6 mt-2 badge rounded bg-secondary'>{exe.label}</div>
-                            <div className='d-flex gap-1'>
+                        <Row className='align-items-center h-100' key={exe.value}>
+                            <Col sm={4}>
+                                <Badge className='exercise-labelName'>{exe.label}</Badge>
+                            </Col>
+                            <Col sm={8} className='d-flex gap-1'>
                                 <Input label="Series" id={`series-${exe.value}`} value={exe.series} onChange={(e) => handleExerciseChange(exe.value, "series", e.target.value)} type={"number"} />
                                 <Input label="Repetitions" id={`repetitions-${exe.value}`} value={exe.repetitions} onChange={(e) => handleExerciseChange(exe.value, "repetitions", e.target.value)} type={"number"} />
-                            </div>
-                        </div>
+                            </Col>
+                        </Row>
                     ))}
                 </>
             ) : null}

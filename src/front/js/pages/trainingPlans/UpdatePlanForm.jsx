@@ -6,6 +6,7 @@ import { Input } from '../../component/Input.jsx';
 import { Context } from '../../store/appContext.js';
 import { formatDate } from '../../helper/formatDate.js';
 import { useLevelOptions } from '../../hooks/useLevelOptions.js';
+import { Badge, Col, Row } from 'react-bootstrap';
 
 export const UpdatePlanForm = () => {
     const { levelOptions } = useLevelOptions();
@@ -95,29 +96,52 @@ export const UpdatePlanForm = () => {
             onSubmit={onEdit}
             actionText={"Edit Plan"}
             goBackOnClick={() => navigate("/training-plan")}
+            customWidth={"700px"}
         >
-            <Input label="Name" id="name" value={formState.name} onChange={(e) => onChange("name", e.target.value)} type={"text"} />
-            <Input label="Registration Date" id="registrationDate" value={formState.registration_date} onChange={(e) => onChange("registration_date", e.target.value)} type={"date"} />
-            <Input label="Finalization Date" id="finalizationDate" value={formState.finalization_date} onChange={(e) => onChange("finalization_date", e.target.value)} type={"date"} />
-            <Input label="Quantity Sessions" id="quantitySession" value={formState.quantity_session} onChange={(e) => onChange("quantity_session", e.target.value)} type={"number"} />
-            <div className='mb-3'>
-                <label htmlFor={"level"} className='form-label'>Level</label>
-                <Select value={formState.level} options={levelOptions} onChange={(data) => onChange("level", data)} />
-            </div>
-            <div className="mb-3">
-                <label htmlFor={"exercises"} className='form-label'>Exercises</label>
-                <Select isMulti options={exerciseCollection} onChange={(data) => onChange("exercises", data)} value={formState.exercises} />
-            </div>
+            <Row>
+                <Col sm={6}>
+                    <Input label="Name" id="name" value={formState.name} onChange={(e) => onChange("name", e.target.value)} type={"text"} />
+                </Col>
+                <Col sm={6}>
+                    <div className='mb-3'>
+                        <label htmlFor={"level"} className='form-label'>Level</label>
+                        <Select value={formState.level} options={levelOptions} onChange={(data) => onChange("level", data)} />
+                    </div>
+                </Col>
+            </Row>
+            <Row>
+                <Col sm={6}>
+                    <Input label="Registration Date" id="registrationDate" value={formState.registration_date} onChange={(e) => onChange("registration_date", e.target.value)} type={"date"} />
+                </Col>
+                <Col sm={6}>
+                    <Input label="Finalization Date" id="finalizationDate" value={formState.finalization_date} onChange={(e) => onChange("finalization_date", e.target.value)} type={"date"} />
+                </Col>
+            </Row>
+
+            <Row>
+                <Col sm={6}>
+                    <Input label="Quantity Sessions" id="quantitySession" value={formState.quantity_session} onChange={(e) => onChange("quantity_session", e.target.value)} type={"number"} />
+                </Col>
+                <Col sm={6}>
+                    <div className="mb-3">
+                        <label htmlFor={"exercises"} className='form-label'>Exercises</label>
+                        <Select isMulti options={exerciseCollection} onChange={(data) => onChange("exercises", data)} value={formState.exercises} />
+                    </div>
+                </Col>
+            </Row>
+
             {formState.exercises.length ? (
                 <>
                     {formState.exercises.map(exe => (
-                        <div className='createFormSeriesRepetitionsContainer' key={exe.value}>
-                            <div className='p-2 fs-6 mt-2 badge rounded bg-secondary'>{exe.label}</div>
-                            <div className='d-flex gap-1'>
+                        <Row className='align-items-center h-100' key={exe.value}>
+                            <Col sm={4}>
+                                <Badge className='exercise-labelName'>{exe.label}</Badge>
+                            </Col>
+                            <Col sm={8} className='d-flex gap-1'>
                                 <Input label="Series" id={`series-${exe.value}`} value={exe.series} onChange={(e) => handleExerciseChange(exe.value, "series", e.target.value)} type={"number"} />
                                 <Input label="Repetitions" id={`repetitions-${exe.value}`} value={exe.repetitions} onChange={(e) => handleExerciseChange(exe.value, "repetitions", e.target.value)} type={"number"} />
-                            </div>
-                        </div>
+                            </Col>
+                        </Row>
                     ))}
                 </>
             ) : null}

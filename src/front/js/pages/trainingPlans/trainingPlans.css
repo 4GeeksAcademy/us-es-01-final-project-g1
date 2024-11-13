@@ -81,13 +81,6 @@
   }
 }
 
-.createFormSeriesRepetitionsContainer {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  place-content: space-evenly;
-}
-
 .innerTableForm-container-exercisesDetails {
   display: flex;
   align-items: center;
@@ -133,4 +126,11 @@
 .trainingExercises-exercises-details:last-child {
   border-bottom: none;
   margin: 0
+}
+
+.exercise-labelName {
+  text-wrap: wrap;
+  padding: 1rem;
+  height: 3rem;
+  background-color: var(--primary) !important;
 }

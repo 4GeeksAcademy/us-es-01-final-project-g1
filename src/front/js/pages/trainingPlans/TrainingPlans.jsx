@@ -12,7 +12,8 @@ import { Title } from '../../component/Title.jsx';
 import { NoRecords } from '../../component/NoRecords.jsx';
 import { formatDate } from '../../helper/formatDate.js';
 import { AddTrainingExercises, TrainingExercises } from './TrainingExercises.jsx';
-import '../../../styles/trainingPlans.css';
+import { Button } from 'react-bootstrap';
+import './trainingPlans.css';
 
 export const TrainingPlans = () => {
   const [linInitialExercise, setLinInitialExercise] = useState("");
@@ -94,9 +95,10 @@ export const TrainingPlans = () => {
     <div className={'container mt-2'}>
       <Title title={"Training Plans"}>
         <div className="sessions-header-container">
-          <Link to={"/create-plan"} className={"btn btn-warning"}>
+
+          <Button variant={"info"} as={Link} to={"/create-plan"}>
             Create a Plan
-          </Link>
+          </Button>
         </div>
       </Title>
       <BannerMessage
@@ -143,11 +145,11 @@ export const TrainingPlans = () => {
                   </td>
                   <td>
                     <div className='d-flex gap-2'>
-                      <div className='btn btn-sm btn-warning rounded' onClick={() => crud(trainingPlan, 'edit')} style={{
+                      <Button variant={"info"} className='btn btn-sm btn-warning rounded' onClick={() => crud(trainingPlan, 'edit')} style={{
                         padding: "0.25rem 0.5rem", fontSize: ".75rem"
                       }}>
                         <MdEdit size={'1.125rem'} />
-                      </div>
+                      </Button>
                       <div className='btn btn-sm btn-secondary rounded'>
                         <FaRegTrashCan size={'1.125rem'} onClick={() => crud(trainingPlan, 'delete')} />
                       </div>

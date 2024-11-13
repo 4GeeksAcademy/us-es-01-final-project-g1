@@ -37,14 +37,14 @@ export const FormLayout = ({ goBackOnClick, title, onSubmit, isLoading = false, 
                                         </button>
                                     </div>
                                     <div className="col-6">
-                                        <button type='submit' className='btn btn-warning w-100' disabled={isLoading}>
+                                        <button type='submit' className='btn btn-primary w-100' disabled={isLoading}>
                                             {actionText}
                                             {isLoading && <span className="mx-1 spinner-border spinner-border-sm" aria-hidden="true"> </span>}
                                         </button>
                                     </div>
                                 </div>
                             ) : (
-                                <button type='submit' className='btn btn-warning w-100' disabled={isLoading}>
+                                <button type='submit' className='btn btn-primary w-100' disabled={isLoading}>
                                     {actionText}
                                     {isLoading && <span className="mx-1 spinner-border spinner-border-sm" aria-hidden="true"> </span>}
 
