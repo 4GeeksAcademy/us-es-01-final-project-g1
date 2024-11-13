@@ -31,19 +31,19 @@ const injectContext = PassedComponent => {
 		  store, instead use actions, like this:
 		*/
 		useEffect(() => {
-			console.log("mount context")
+			// state.actions.getInitial(); //--> esto para popular los datos iniciales
 			state.actions.isLogin();
-			return () => console.log("unmount context")
 		}, []);
 
 		useEffect(() => {
-			// esto controla si en nuestra app perdemos el estado estando logeados
+			// esto controla si en nuestra app perdemos el estado estando logeados o le damos actualizar,
 			if (state.store.isLogin && !state.store.hasFetchedData) {
 				state.actions.getTrainingPlans();
 				state.actions.getSessions();
 				state.actions.getExercises();
 				state.actions.getMuscles();
 				state.actions.getTrainingPlanExercises();
+				state.actions.getSessionExercises();
 				setState({
 					...state,
 					store: {

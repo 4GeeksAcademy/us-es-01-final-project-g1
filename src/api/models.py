@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-
+from sqlalchemy import Column, String
 
 db = SQLAlchemy()
 
@@ -43,6 +43,7 @@ class Exercises(db.Model):
     exercise_base = db.Column(db.String(), unique=False, nullable=False) 
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     category_to = db.relationship('Categories', foreign_keys=[category_id], backref=db.backref('exercises', lazy='select'))
+    image_url = Column(String)
 
     def __repr__(self):
         return f'<Exercise {self.id} - {self.name} - category {self.category_id}>'
@@ -58,7 +59,8 @@ class Exercises(db.Model):
                 'image_url_secondary': self.muscle_to.image_url_secondary if self.muscle_to else None,
                 'exercise_base': self.exercise_base,
                 'category_id': self.category_id,
-                'category_name': self.category_to.name if self.category_to else None, 
+                'category_name': self.category_to.name if self.category_to else None,
+                'image_url': self.image_url if self.image_url else None 
                 }
     
 

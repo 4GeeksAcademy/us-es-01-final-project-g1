@@ -2,15 +2,17 @@ import React, { useContext, useState } from 'react';
 import Swal from 'sweetalert2';
 import { FaInfo } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { MdEdit } from 'react-icons/md';
 import { Context } from '../../store/appContext.js';
 import { BannerMessage } from '../../component/BannerMessage.jsx';
 import { Filters } from '../../component/Filters.jsx';
+import { SkeletonTable } from '../../component/Loader.jsx';
+import { Title } from '../../component/Title.jsx';
+import { NoRecords } from '../../component/NoRecords.jsx';
 import { formatDate } from '../../helper/formatDate.js';
 import { AddTrainingExercises, TrainingExercises } from './TrainingExercises.jsx';
 import '../../../styles/trainingPlans.css';
-import { SkeletonTable } from '../../component/Loader.jsx';
 
 export const TrainingPlans = () => {
   const [linInitialExercise, setLinInitialExercise] = useState("");
@@ -90,12 +92,19 @@ export const TrainingPlans = () => {
   }
   return (
     <div className={'container mt-2'}>
+      <Title title={"Training Plans"}>
+        <div className="sessions-header-container">
+          <Link to={"/create-plan"} className={"btn btn-warning"}>
+            Create a Plan
+          </Link>
+        </div>
+      </Title>
       <BannerMessage
         variant={'info'}
         message={<Message />}
         evaluation={true}
       />
-      <Filters options={filterOptions} onFilterChange={setFilter} />
+      <Filters options={filterOptions} onFilterChange={setFilter} title={"Filter by Level"} />
       <table className='table table-dark table-striped table-responsive'>
         <thead>
           <tr>
@@ -109,8 +118,8 @@ export const TrainingPlans = () => {
           </tr>
         </thead>
         <tbody>
-          {trainingPlans &&
-            (Boolean(filter) ? filteredPlans : trainingPlans)?.map((trainingPlan, index) => {
+          {filteredPlans.length ? trainingPlans &&
+            filteredPlans?.map((trainingPlan, index) => {
               return (
                 <tr key={index}>
                   <td>{trainingPlan?.name}</td>
@@ -147,7 +156,7 @@ export const TrainingPlans = () => {
                 </tr>
               );
             })
-          }
+            : <NoRecords />}
         </tbody>
       </table>
     </div>

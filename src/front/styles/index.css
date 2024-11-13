@@ -3,15 +3,7 @@
     --primary-dark: #2c2b33;
     --light: #fff;
     --gray: #d3c7bb;
-}
-
-.custom-popover {
-    --bs-popover-max-width: 200px;
-    --bs-popover-border-color: var(--primary);
-    --bs-popover-header-bg: var(--gray);
-    --bs-popover-header-color: var(--light);
-    --bs-popover-body-padding-x: 1rem;
-    --bs-popover-body-padding-y: .5rem;
+    --bs-warning: #ff5733
 }
 
 body {
@@ -176,4 +168,50 @@ td {
 
 .modal-content.slide-out {
     animation: slideOutDown 0.3s ease-in-out;
+}
+
+.common-title {
+    border-bottom: 1px solid var(--primary);
+    color: var(--light);
+    margin-bottom: 0.5rem;
+    text-align: end;
+    font-size: xx-large;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.noRecords-container {
+    background-color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5%;
+    border-radius: 12px;
+}
+
+.noRecords-container-icon {
+    margin: 0 1rem;
+    font-size: 3rem;
+
+    svg {
+        fill: var(--gray)
+    }
+}
+
+.noRecords-container-text {
+    font-size: 2rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.expandable-text {
+    transition: max-height 0.3s ease;
+    overflow: hidden;
+    max-height: 4.5em;
+}
+
+.expandable-text.expanded {
+    max-height: none;
 }

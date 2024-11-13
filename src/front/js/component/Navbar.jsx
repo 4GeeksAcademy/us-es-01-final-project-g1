@@ -23,7 +23,21 @@ export const Navbar = () => {
 				<div className="nav-item">
 					<Link to={"about-us"} className="navbar-custom-link">About us</Link>
 				</div>
-				<Link to={"contact-us"} className="navbar-custom-link">Contactanos</Link>
+				<div className="nav-item">
+					<Link to={"exercises"} className="navbar-custom-link">Exercises</Link>
+				</div>
+				<div className="nav-item">
+					<Link to={"training-plan"} className="navbar-custom-link">Training Plans</Link>
+				</div>
+				<div className="nav-item">
+					<Link to={"sessions"} className="navbar-custom-link">Sessions</Link>
+				</div>
+				<div className="nav-item">
+					<Link to={"muscles"} className="navbar-custom-link">Muscles</Link>
+				</div>
+				<div className="nav-item">
+					<Link to={"contact-us"} className="navbar-custom-link">Contactanos</Link>
+				</div>
 			</ul>
 			<button className="cta-button">
 				{store.isLogin ?

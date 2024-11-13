@@ -140,6 +140,43 @@ def training_plan(id):
         row.finalization_date = data.get('finalization_date')
         row.quantity_session = data.get('quantity_session')
         row.is_active = data.get('is_active')
+
+         # Actualizar los ejercicios asociados
+        updated_exercises = data.get('exercises', [])
+
+        # Recoger los IDs de ejercicios existentes asociados a este plan
+        current_exercise_ids = {exercise.exercise_id for exercise in row.training_exercises}
+
+         # Recoger los IDs de ejercicios actualizados
+        updated_exercise_ids = {exercise['exercise_id'] for exercise in updated_exercises}
+
+        # Eliminar ejercicios que no están en la nueva lista
+        exercises_to_delete = current_exercise_ids - updated_exercise_ids
+        TrainingExercises.query.filter(
+            TrainingExercises.training_plan_id == id,
+            TrainingExercises.exercise_id.in_(exercises_to_delete)
+        ).delete(synchronize_session='fetch')
+
+          # Insertar o actualizar los ejercicios
+        for exercise_data in updated_exercises:
+            exercise = TrainingExercises.query.filter_by(
+                training_plan_id=id,
+                exercise_id=exercise_data['exercise_id']
+            ).first()
+            if exercise:
+                # Actualizar los ejercicios existentes
+                exercise.repetitions = exercise_data['repetitions']
+                exercise.series = exercise_data['series']
+            else:
+                # Insertar los nuevos ejercicios
+                new_exercise = TrainingExercises(
+                    training_plan_id=id,
+                    exercise_id=exercise_data['exercise_id'],
+                    repetitions=exercise_data['repetitions'],
+                    series=exercise_data['series']
+                )
+                db.session.add(new_exercise)
+
         db.session.commit()
         response_body['message'] = f'Plan de entrenamiento {id} actualizado correctamente'
         response_body['results'] = row.serialize()
@@ -166,28 +203,43 @@ def sessions():
         return response_body, 200
     if request.method == 'POST':
         data = request.json
-        plan = data.get('training_plan_id', None)
-        if not plan: 
+        plan_id = data.get('training_plan_id', None)
+        if not plan_id: 
             response_body['message'] = 'Faltan datos en el request (training_plan_id)'
             return response_body, 400
-        row = db.session.execute(db.select(TrainingPlans).where(TrainingPlans.id == plan)).scalars().first()
-        if not row:
+        
+        training_plan = db.session.execute(db.select(TrainingPlans).where(TrainingPlans.id == plan_id)).scalars().first()
+        if not training_plan:
             response_body['message'] = 'El Plan no existe'
             return response_body, 400
-        if row.user_id != current_user['user_id']:
+        if training_plan.user_id != current_user['user_id']:
             response_body['message'] = 'Sin Autorizacion'
             return response_body, 401
         
-        session_row = Sessions(
+        new_session = Sessions(
             date=data.get('date'),
-            training_plan_id=data.get('training_plan_id'),
+            training_plan_id=plan_id,
             name=data.get('name')
         )
 
-        db.session.add(session_row)
+        db.session.add(new_session)
+        db.session.flush()  # Obtener el ID de la nueva sesin antes del commit
+
+        # Obtener los exercises del TrainingPlan y crear los ejercicios de sesion
+        training_exercises = db.session.query(TrainingExercises).filter_by(training_plan_id=plan_id).all()
+        for exercise in training_exercises:
+            session_exercise = SessionExercises(
+                session_id=new_session.id,
+                exercise_id=exercise.exercise_id,
+                repetitions=0,
+                series=0,
+                is_done=False  # inicializamos como no completado
+            )
+            db.session.add(session_exercise)
+
         db.session.commit()
-        response_body['message'] = 'Sesión creada exitosamente'
-        response_body['results'] = row.serialize()
+        response_body['message'] = 'Sesión creada exitosamente con ejercicios del plan'
+        response_body['results'] = new_session.serialize()
         return response_body, 200
 
 
@@ -271,71 +323,6 @@ def training_exercises():
         return response_body, 200
 
 
-@api.route('/initial-setup', methods=['GET'])
-@jwt_required()
-def initial_setup():
-    response_body = {}
-    current_user = get_jwt_identity()
-    print(current_user)
-    if not current_user["is_admin"]: 
-        response_body["message"] = "Unauthorized"
-        return response_body, 401
-    # Muscle: wger.de     
-    url = 'https://wger.de/api/v2/muscle/'
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        response_body["muscles"] = data["results"]
-        for row in data["results"]:
-            item = Muscles(
-                        id=row['id'],
-                        name=row['name'],
-                        name_en=row['name_en'],
-                        is_front=row['is_front'],
-                        image_url_main=row['image_url_main'],
-                        image_url_secondary=row['image_url_secondary'])
-            db.session.add(item)
-            db.session.commit()    
-    # Category: wger.de
-    url = 'https://wger.de/api/v2/exercisecategory/'
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        response_body["categories"] = data["results"]
-        for row in data["results"]:
-            item = Categories(id=row['id'],
-                              name=row['name'])                     
-            db.session.add(item)
-            db.session.commit()  
-    # Exercise: wger.de
-    url = 'https://wger.de/api/v2/exercise/?equipment=7&language=4&limit=39'
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        response_body["exercises"] = data["results"]
-
-        for row in data["results"]:
-            muscle_id = row['muscles'][0] if row['muscles'] else None
-
-            if muscle_id:
-                muscle = db.session.query(Muscles).filter_by(id=muscle_id).first()
-                if not muscle:
-                    continue  # Si el musculo no existe, omitir este ejercicio
-            
-            item = Exercises(
-                id=row['id'],
-                name=row['name'],
-                description=row['description'],
-                muscle_id=muscle_id,
-                exercise_base=row['exercise_base'],
-                category_id=row['category']
-            )
-            db.session.add(item)
-            db.session.commit()  
-
-    response_body["message"] = "Setup Ok"    
-    return response_body, 200 
-
 
 @api.route('/muscles', methods=['GET'])
 @jwt_required()
@@ -350,3 +337,144 @@ def muscles():
     response_body['results'] = result
 
     return jsonify(response_body), 200
+
+
+@api.route('/session-exercises', methods=['PUT'])
+@jwt_required()
+def update_session_exercise():
+    data = request.json.get("exercises", [])
+    
+    if not data:
+        return {"message": "No se proporcionaron ejercicios para actualizar"}, 400
+
+    response_body = {"updated": [], "failed": []}
+
+    for exercise_data in data:
+        exercise_id = exercise_data.get("id")
+        session_exercise = db.session.get(SessionExercises, exercise_id)
+
+        if not session_exercise:
+            response_body["failed"].append({"id": exercise_id, "message": "El ejercicio no existe"})
+            continue
+
+        # Actualizamos los datos del ejercicio
+        session_exercise.series = exercise_data.get("completedSeries", session_exercise.series)
+        session_exercise.repetitions = exercise_data.get("completedRepetitions", session_exercise.repetitions)
+        session_exercise.is_done = exercise_data.get("is_done", session_exercise.is_done)
+
+        response_body["updated"].append(session_exercise.serialize())
+
+    db.session.commit()
+    return {"message": "Progreso actualizado correctamente", "results": response_body}, 200
+
+
+# Obtener todas las imgs en lotes
+def fetch_all_images():
+    image_dict = {}
+    limit = 100
+    offset = 0
+    total_images = 317  # total de imgs esperadas
+    while offset < total_images:
+        response = requests.get(f'https://wger.de/api/v2/exerciseimage/?limit={limit}&offset={offset}')
+        if response.status_code == 200:
+            images_data = response.json()
+            # Actualizar image_dict con las nuevas imgs
+            image_dict.update({img["exercise_base"]: img["image"] for img in images_data["results"]})
+            offset += limit
+        else:
+            print("Error al obtener imgs:", response.status_code)
+            break
+    return image_dict
+
+
+# la idea es que mandemos esta una unica vez para poder popular los datos basicos.
+@api.route('/initial-setup', methods=['GET'])
+@jwt_required()
+def initial_setup():
+    response_body = {}
+    current_user = get_jwt_identity()
+    if not current_user["is_admin"]: 
+        return {"message": "Unauthorized"}, 401
+
+    # Llamar a fetch_all_images para obtener todas las imgs de ejercicios o las que se puedan
+    image_dict = fetch_all_images()
+
+    # Procesar y almacenar musculos
+    url = 'https://wger.de/api/v2/muscle/'
+    response = requests.get(url)
+    if response.status_code == 200:
+        muscles_data = response.json()
+        for row in muscles_data["results"]:
+            muscle = Muscles(
+                id=row['id'],
+                name=row['name'],
+                name_en=row['name_en'],
+                is_front=row['is_front'],
+                image_url_main=row['image_url_main'],
+                image_url_secondary=row['image_url_secondary']
+            )
+            db.session.add(muscle)
+        db.session.commit()
+    
+    # Procesar y almacenar categorias
+    url = 'https://wger.de/api/v2/exercisecategory/'
+    response = requests.get(url)
+    if response.status_code == 200:
+        categories_data = response.json()
+        for row in categories_data["results"]:
+            category = Categories(id=row['id'], name=row['name'])
+            db.session.add(category)
+        db.session.commit()
+
+    # Obtener y almacenar ejercicios en varios lotes con language=4 (español)
+    limit = 100
+    offset = 0
+    response_body["exercises"] = []
+    while True:
+        url = f'https://wger.de/api/v2/exercise/?limit={limit}&offset={offset}&language=4&equipment=7'
+        response = requests.get(url)
+        if response.status_code != 200:
+            break
+
+        exercises_data = response.json()["results"]
+        for row in exercises_data:
+            # Verificar si el ejercicio tiene un msculo asociado y si ese musculo estae en la base de datos
+            muscle_id = row['muscles'][0] if row['muscles'] else None
+            if muscle_id:
+                muscle = db.session.query(Muscles).filter_by(id=muscle_id).first()
+                if not muscle:
+                    print(f"Omitiendo ejercicio {row['name']} - músculo {muscle_id} no encontrado.")
+                    continue  # Si el musculo no existe, omitir este ejercicio
+            else:
+                print(f"Omitiendo ejercicio {row['name']} - sin músculo especificado.")
+                continue  # Si no hay ningún musculo especificado, omitir el ejercicio
+
+            # Verificar si el ejercicio ya existe en la base de datos
+            existing_exercise = db.session.query(Exercises).filter_by(id=row['id']).first()
+            if existing_exercise:
+                continue  # Omitir si el ejercicio ya está en la base de datos
+
+            # Obtener la URL de la imagen si está disponible
+            exercise_image_url = image_dict.get(row['exercise_base'], None)
+
+            # Crear y almacenar el ejercicio
+            exercise = Exercises(
+                id=row['id'],
+                name=row['name'],
+                description=row['description'],
+                muscle_id=muscle_id,
+                exercise_base=row['exercise_base'],
+                category_id=row['category'],
+                image_url=exercise_image_url
+            )
+            db.session.add(exercise)
+            response_body["exercises"].append({"id": row['id'], "name": row['name'], "image_url": exercise_image_url})  # Agregar a la respuesta
+
+        db.session.commit()
+        offset += limit
+        if not exercises_data:
+            break  # Termina cuando no hay más ejercicios disponibles
+
+    response_body["message"] = "Setup completo"
+    return response_body, 200
+

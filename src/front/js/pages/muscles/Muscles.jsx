@@ -1,12 +1,16 @@
 import React, { useContext, useState } from "react"
 import OverlayTrigger from "react-bootstrap/OverlayTrigger"
 import Tooltip from "react-bootstrap/Tooltip"
+import Button from "react-bootstrap/Button"
 import { FaRegEye } from "react-icons/fa"
 import { MdZoomIn, MdZoomOut } from "react-icons/md"
 import { Context } from "../../store/appContext"
 import { SkeletonTable } from "../../component/Loader.jsx"
 import { CustomModal } from "../../component/CustomModal.jsx"
 import { Filters } from "../../component/Filters.jsx"
+import { Title } from "../../component/Title.jsx"
+import { NoRecords } from "../../component/NoRecords.jsx"
+import "../../../styles/trainingPlans.css"
 
 export const Muscles = () => {
     const [filter, setFilter] = useState(null);
@@ -52,6 +56,7 @@ export const Muscles = () => {
 
     return (
         <div className="container mt-2">
+            <Title title={"Muscles"} />
             <Filters options={filterOptions} onFilterChange={setFilter} />
             <table className='table table-dark table-striped table-responsive'>
                 <thead>
@@ -63,7 +68,7 @@ export const Muscles = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {muscles &&
+                    {filteredMuscles.length ? muscles &&
                         filteredMuscles.map((muscle, index) => {
                             return (
                                 <tr key={index}>
@@ -71,17 +76,16 @@ export const Muscles = () => {
                                     <td>{muscle?.name_en}</td>
                                     <td>{muscle?.is_front ? "Is front muscle" : "is back muscle"}</td>
                                     <td>
-                                        <button
-                                            className="btn btn-sm btn-warning rounded"
-                                            onClick={() => handleViewClick(muscle)}
-                                        >
-                                            <FaRegEye size={"1rem"} />
-                                        </button>
+                                        <Button size={"sm"} onClick={() => handleViewClick(muscle)} variant="warning">
+                                            <span className="d-flex gap-1 align-items-center">
+                                                <FaRegEye /> Preview
+                                            </span>
+                                        </Button>
                                     </td>
                                 </tr>
                             );
                         })
-                    }
+                        : <NoRecords />}
                 </tbody>
             </table>
             <CustomModal
@@ -109,7 +113,7 @@ export const Muscles = () => {
                         style={{ height: `${zoom}px`, transition: "height 0.3s ease" }}
                     />
                 </div>
-                <p className="mt-3">Scientific name: {viewMuscles.selectedMuscle.muscle_name}</p>
+                <p className="mt-3">Scientific name: {viewMuscles.selectedMuscle.name || viewMuscles.selectedMuscle.name_en}</p>
             </CustomModal>
 
 

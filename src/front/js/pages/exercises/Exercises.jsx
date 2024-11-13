@@ -1,21 +1,30 @@
-import React, { Children, useContext, useEffect, useState } from "react"
+import React, { useContext, useState } from "react"
+import OverlayTrigger from "react-bootstrap/OverlayTrigger"
+import Tooltip from "react-bootstrap/Tooltip"
+import Button from "react-bootstrap/Button"
+import { FaRegEye } from "react-icons/fa";
+import { MdZoomIn } from "react-icons/md";
+import { MdZoomOut } from "react-icons/md";
 import { Context } from '../../store/appContext.js'
 import { Filters } from "../../component/Filters.jsx"
 import { SkeletonTable } from "../../component/Loader.jsx"
-import { MdZoomIn } from "react-icons/md";
-import { MdZoomOut } from "react-icons/md";
 import { CustomModal } from "../../component/CustomModal.jsx"
-import { FaRegEye } from "react-icons/fa";
-import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Title } from "../../component/Title.jsx";
+import { ExpandableText } from "../../component/ExpandableText.jsx";
 
 
 export const Exercises = () => {
   const [filter, setFilter] = useState("");
+  const [zoom, setZoom] = useState(300)
   const [viewMuscles, setViewMuscles] = useState({
     show: false,
     selectedMuscle: ""
   })
-  const [zoom, setZoom] = useState(300)
+  const [viewExercise, setViewExercise] = useState({
+    show: false,
+    selectedExercise: ""
+  })
+
   const { store } = useContext(Context)
   const { exercisesStates, } = store
   const { exercises, isExercisesLoading } = exercisesStates
@@ -40,6 +49,9 @@ export const Exercises = () => {
 
   const handleClose = () => setViewMuscles({ selectedMuscle: "", show: false })
 
+  const openPreviewExercise = (exe) => setViewExercise({ selectedExercise: exe, show: true })
+  const closePreviewExercise = () => setViewExercise({ selectedExercise: "", show: false })
+
   const handleZoomIn = () => {
     if (zoom < 900) setZoom(prevZoom => prevZoom + 100);
   };
@@ -47,6 +59,8 @@ export const Exercises = () => {
   const handleZoomOut = () => {
     if (zoom > 200) setZoom(prevZoom => prevZoom - 100);
   };
+
+
 
   if (isExercisesLoading) {
     return (
@@ -59,14 +73,18 @@ export const Exercises = () => {
 
   return (
     <div className={"container mt-2"}>
-      <Filters options={filterOptions} onFilterChange={setFilter} />
+      <Title title={"Exercises"} />
+
+
+      <Filters options={filterOptions} onFilterChange={setFilter} title={"Filter by Categories"} />
       <table className="table table-dark table-striped">
         <thead>
           <tr>
             <th scope="col">Name</th>
-            <th scope="col">Category</th>
-            <th scope="col">Muscle</th>
             <th scope="col">Description</th>
+            <th scope="col">Category</th>
+            <th scope="col" className="text-center">Muscle</th>
+            <th scope="col" className="text-center">Image</th>
           </tr>
         </thead>
         <tbody>
@@ -74,18 +92,23 @@ export const Exercises = () => {
             return (
               <tr key={exercise.id}>
                 <td>{exercise.name}</td>
-                <td dangerouslySetInnerHTML={{ __html: exercise.description }}></td>
+                <td style={{ maxWidth: "650px" }} >
+                  <ExpandableText text={exercise.description} maxLength={100} />
+                </td>
                 <td>{exercise.category_name}</td>
-                <td>
-                  <div className="d-flex gap-2 align-items-center justify-content-end">
-                    <span>{exercise.muscle_name_en}</span>
-                    <button
-                      className="btn btn-sm btn-warning rounded"
-                      onClick={() => handleViewClick(exercise)}
-                    >
-                      <FaRegEye size={"1rem"} />
-                    </button>
+                <td style={{ minWidth: "235px" }}>
+                  <div className="d-flex gap-2 align-items-center justify-content-center">
+                    <Button size={"sm"} onClick={() => handleViewClick(exercise)} variant={"warning"}>
+                      <span className="d-flex gap-1 align-items-center">
+                        <FaRegEye /> {exercise.muscle_name_en || exercise.muscle_name}
+                      </span>
+                    </Button>
                   </div>
+                </td>
+                <td /* style={{ minWidth: "120px" }} */ >
+                  <Button size={"sm"} onClick={() => openPreviewExercise(exercise)} variant={"warning"}>
+                    Preview
+                  </Button>
                 </td>
               </tr>
             )
@@ -97,6 +120,7 @@ export const Exercises = () => {
         show={viewMuscles.show}
         onHide={handleClose}
         title={viewMuscles.selectedMuscle.muscle_name_en}
+        size="lg"
       >
         <div className="d-flex justify-content-end gap-2" >
           <OverlayTrigger overlay={<Tooltip id="tt-zoom-out">Zoom Out</Tooltip>}>
@@ -115,10 +139,39 @@ export const Exercises = () => {
             src={`${process.env.BACKEND_URL}${viewMuscles.selectedMuscle.image_url_main}`}
             alt={viewMuscles.selectedMuscle.muscle_name_en}
             className="img-fluid"
-            style={{ height: `${zoom}px`, transition: "height 0.3s ease" }}
+            style={{ height: `${zoom}px`, width: `${zoom}px`, transition: "height 0.3s ease" }}
           />
         </div>
-        <p className="mt-3">Scientific name: {viewMuscles.selectedMuscle.muscle_name}</p>
+        <p className="mt-3">Scientific name: {viewMuscles.selectedMuscle.muscle_name || viewMuscles.selectedMuscle.muscle_name_en}</p>
+      </CustomModal>
+
+      <CustomModal
+        show={viewExercise.show}
+        onHide={closePreviewExercise}
+        // title={viewMuscles.selectedMuscle.muscle_name_en}
+        size="lg"
+      >
+        <h2 className="mt-3">Exercise name: {viewExercise.selectedExercise.name || viewExercise.selectedExercise.category_name}</h2>
+        <div className="d-flex justify-content-end gap-2" >
+          <OverlayTrigger overlay={<Tooltip id="tt-zoom-out">Zoom Out</Tooltip>}>
+            <div onClick={handleZoomOut} style={{ cursor: "pointer", userSelect: "none" }}>
+              <MdZoomOut size={"2rem"} fill={"var(--primary)"} />
+            </div>
+          </OverlayTrigger>
+          <OverlayTrigger overlay={<Tooltip id="tt-zoom-in">Zoom In</Tooltip>}>
+            <div onClick={handleZoomIn} style={{ cursor: "pointer", userSelect: "none" }}>
+              <MdZoomIn size={"2rem"} fill={"var(--primary)"} />
+            </div>
+          </OverlayTrigger>
+        </div>
+        <div className="d-flex justify-content-center">
+          <img
+            src={`${viewExercise.selectedExercise.image_url || "https://img.freepik.com/free-vector/flat-design-no-photo-sign_23-2149259323.jpg?t=st=1731464653~exp=1731468253~hmac=3e7898b220058168ebaca9ceb62e0e757e89031b2554e9ce0871ab5d33ead005&w=900"}`}
+            alt={viewExercise.selectedExercise.name}
+            className="img-fluid"
+            style={{ height: `${zoom}px`, width: `${zoom}px`, transition: "height 0.3s ease" }}
+          />
+        </div>
       </CustomModal>
     </div>
   )

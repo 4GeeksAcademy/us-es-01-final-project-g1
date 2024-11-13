@@ -50,7 +50,7 @@ export const Dashboard = () => {
             ) : (<CreateCard model={"sessions"} />)}
           </div>
           <div className='col-12 col-sm-12 col-md-6 col-lg-6'>
-            {store.sessionsStates.isSessionsLoading ? <Loader /> : store?.sessionsStates?.sessions?.length ? (
+            {store.musclesStates.isMusclesLoading ? <Loader /> : store?.musclesStates?.muscles.length ? (
               <CardInfo title={"Muscles"} subtitle={"Muscles details"} description={"View a guidance of the muscles"} model={"muscles"} />
             ) : (<CreateCard model={"muscles"} />)}
           </div>

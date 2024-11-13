@@ -16,9 +16,11 @@ const initialState = {
 		sessions: [],
 	},
 	exercisesStates: {
-		trainingPlanExercises: [],
+		exercises: [],
 		isExercisesLoading: false,
-		exercises: []
+		isSessionExercisesLoading: false,
+		sessionExercises: [],
+		trainingPlanExercises: [],
 	},
 	musclesStates: {
 		isMusclesLoading: false,
@@ -118,6 +120,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 						getActions().getMuscles();
 						getActions().getSessions();
 						getActions().getExercises();
+						getActions().getSessionExercises();
 
 					} else {
 						console.warn("Token no válido. Por favor, vuelve a iniciar sesión.");
@@ -146,7 +149,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 				});
 				navigate("/dashboard");
 			},
-			// trainingPlans
 			getTrainingPlans: async () => {
 				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: true } })
 				const { error, data } = await fetchData({ endpoint: "training-plans", method: "GET" });
@@ -211,7 +213,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 				navigate("/training-plan")
 				return response
 			},
-			//Sessions
 			getSessions: async () => {
 				setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: true } });
 				const { error, data } = await fetchData({ endpoint: "sessions", method: "GET" });
@@ -245,6 +246,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				setStore({ ...getStore(), message: data.message, });
 
 				await getActions().getSessions();
+				await getActions().getSessionExercises();
 				navigate("/sessions");
 
 			},
@@ -270,7 +272,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 				await getActions().getTrainingPlans();
 				navigate("/training-plan");
 			},
-			//Exercises
 			getTrainingPlanExercises: async () => {
 				setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: true } });
 				const { error, data } = await fetchData({ endpoint: "training-exercises", method: "GET" });
@@ -317,7 +318,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 			},
 			getMuscles: async () => {
-				console.log("entre en mi request de muscles")
 				setStore({ ...getStore(), musclesStates: { ...getStore().musclesStates, isMusclesLoading: true } });
 				const { error, data } = await fetchData({ endpoint: "muscles", method: "GET" });
 
@@ -333,6 +333,97 @@ const getState = ({ getStore, getActions, setStore }) => {
 						isMusclesLoading: false
 					}
 				});
+
+			},
+			getSessionExercises: async () => {
+				setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isSessionExercisesLoading: true } });
+				const { error, data } = await fetchData({ endpoint: "session-exercises", });
+
+				if (error) {
+					setStore({
+						...getStore(),
+						errorMessage: error,
+						exercisesStates: {
+							...getStore().exercisesStates,
+							isSessionExercisesLoading: false
+						}
+					});
+					return;
+				}
+
+				setStore({
+					...getStore(),
+					exercisesStates: {
+						...getStore().exercisesStates,
+						sessionExercises: data.results,
+						isSessionExercisesLoading: false
+					}
+				});
+
+			},
+			updateSessionExercises: async (exercisesToUpdate) => {
+				setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isSessionExercisesLoading: true } });
+
+				const { error, data } = await fetchData({
+					endpoint: "session-exercises",
+					method: "PUT",
+					body: { exercises: exercisesToUpdate }  // Pasar todos los ejercicios en un solo request
+				});
+
+				if (error) {
+					setStore({
+						...getStore(),
+						errorMessage: error,
+						message: error,
+						exercisesStates: { ...getStore().exercisesStates, isSessionExercisesLoading: false }
+					});
+					return;
+				}
+
+				// Actualizar el estado con los ejercicios actualizados
+				const updatedExercises = data.results.updated || [];
+				setStore({
+					...getStore(),
+					message: data.message,
+					exercisesStates: {
+						...getStore().exercisesStates,
+						sessionExercises: getStore().exercisesStates.sessionExercises.map(exercise => {
+							const updatedExercise = updatedExercises.find(e => e.id === exercise.id);
+							return updatedExercise ? { ...exercise, ...updatedExercise } : exercise;
+						}),
+						isSessionExercisesLoading: false
+					}
+				});
+
+				// Refresca los datos después de actualizar
+				getActions().getSessionExercises(); // Refresca los datos después de actualizar
+				getActions().getSessions(); // Refresca los datos después de actualizar
+			},
+			getInitial: async () => {
+				const uri = `${process.env.BACKEND_URL}/api/initial-setup`
+				const authToken = localStorage.getItem("token")
+				const options = {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: ` Bearer ${authToken}`
+					}
+				}
+				setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: true } })
+				const response = await fetch(uri, options)
+				const test = await response.json()
+				// if (!response.ok) {
+				// 	setStore({ ...getStore(), exercisesStates: { ...getStore().exercisesStates, isExercisesLoading: false } })
+				// 	return
+				// }
+				// setStore({
+				// 	...getStore(),
+				// 	exercisesStates: {
+				// 		...getStore().exercisesStates,
+				// 		exercises: exercises.results,
+				// 		isExercisesLoading: false
+				// 	}
+				// })
 
 			},
 		}
