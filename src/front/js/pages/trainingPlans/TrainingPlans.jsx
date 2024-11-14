@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react';
+import { Badge, Button } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import { FaInfo } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
@@ -11,13 +12,10 @@ import { SkeletonTable } from '../../component/Loader.jsx';
 import { Title } from '../../component/Title.jsx';
 import { NoRecords } from '../../component/NoRecords.jsx';
 import { formatDate } from '../../helper/formatDate.js';
-import { AddTrainingExercises, TrainingExercises } from './TrainingExercises.jsx';
-import { Button } from 'react-bootstrap';
+import { TrainingExercises } from './TrainingExercises.jsx';
 import './trainingPlans.css';
 
 export const TrainingPlans = () => {
-  const [linInitialExercise, setLinInitialExercise] = useState("");
-  const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState("");
 
   const { store, actions } = useContext(Context);
@@ -77,10 +75,7 @@ export const TrainingPlans = () => {
     });
   };
 
-  const linkInitialExercise = (id) => {
-    setLinInitialExercise(id);
-    setShowForm(true)
-  };
+
 
   const Message = () => <div className='infoMessage'><FaInfo /> You can add your exercises directly from the table or when creating a new training plan.</div>
 
@@ -114,8 +109,10 @@ export const TrainingPlans = () => {
             <th scope='col'>Registration Date</th>
             <th scope='col'>Finalization Date</th>
             <th scope='col'># Session</th>
+            <th scope='col'>Status</th>
             <th scope='col'>Level</th>
             <th scope='col'>Exercises</th>
+
             <th scope='col'></th>
           </tr>
         </thead>
@@ -128,20 +125,14 @@ export const TrainingPlans = () => {
                   <td>{formatDate(trainingPlan?.registration_date)}</td>
                   <td>{formatDate(trainingPlan?.finalization_date)}</td>
                   <td>{trainingPlan?.quantity_session}</td>
+                  <td>
+                    <Badge bg={trainingPlan?.is_active ? "success" : "danger"}>
+                      {trainingPlan?.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </td>
                   <td>{trainingPlan?.level}</td>
                   <td style={{ position: "relative" }}>
-                    <AddTrainingExercises
-                      trainingPlan={trainingPlan}
-                      onClick={() => linkInitialExercise(trainingPlan.id)}
-                      showForm={showForm}
-                    />
-                    <TrainingExercises
-                      showForm={showForm}
-                      setShowForm={setShowForm}
-                      linInitialExercise={linInitialExercise}
-                      tpId={trainingPlan?.id}
-                    />
-
+                    <TrainingExercises trainingPlan={trainingPlan} />
                   </td>
                   <td>
                     <div className='d-flex gap-2'>

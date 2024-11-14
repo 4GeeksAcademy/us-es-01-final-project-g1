@@ -4,7 +4,7 @@ const initialState = {
 	user: {},
 	errorMessage: null,
 	isLoginLoading: false,
-	hasFetchedData: false, // Nueva bandera para controlar las peticiones
+	hasFetchedData: false,
 	trainingPlansStates: {
 		trainingPlans: [],
 		isTrainingPlansLoading: false,
@@ -50,10 +50,12 @@ const fetchData = async ({ endpoint, method = "GET", authToken = true, body = nu
 		const response = await fetch(url, options);
 		const data = await response.json();
 		if (!response.ok) {
+			console.log("🚀 ~ fetchData ~ data:", data)
 			return { error: data.message || "An error occurred", data: null };
 		}
 		return { error: null, data };
 	} catch (error) {
+		console.log("🚀 ~ fetchData ~ error:", error)
 		return { error: "Network error", data: null };
 	}
 };
@@ -204,10 +206,11 @@ const getState = ({ getStore, getActions, setStore }) => {
 				const response = await fetch(uri, options)
 				const data = await response.json()
 				if (!response.ok) {
-					setStore({ errorMessage: data.message, message: data.message, })
+					setStore({ errorMessage: data.message, message: data.message, trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: false } })
 				}
 
 				getActions().getTrainingPlanExercises()
+				getActions().getSessionExercises()
 				getActions().getTrainingPlans()
 				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: false } })
 				navigate("/training-plan")
@@ -216,6 +219,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 			getSessions: async () => {
 				setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: true } });
 				const { error, data } = await fetchData({ endpoint: "sessions", method: "GET" });
+
 				if (error) {
 					setStore({ ...getStore(), sessionsStates: { ...getStore().sessionsStates, isSessionsLoading: false } });
 					return;
@@ -235,8 +239,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 				if (error) {
 					setStore({
 						...getStore(),
-						errorMessage: data.message,
-						message: data.message,
+						errorMessage: error,
+						message: error,
 						sessionsStates: {
 							isSessionsLoading: false
 						}

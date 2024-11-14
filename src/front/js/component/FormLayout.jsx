@@ -2,7 +2,21 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 
 
-export const FormLayout = ({ goBackOnClick, title, onSubmit, isLoading = false, customWidth, actionText, children, adionalActionHint, adionalActionPath, aditionalCallback, adionalActionText, customMessage }) => {
+export const FormLayout = ({
+    aditionalCallback,
+    adionalActionHint,
+    adionalActionPath,
+    adionalActionText,
+    goBackOnClick,
+    actionText,
+    children,
+    customMessage,
+    customWidth,
+    isLoading = false,
+    onSubmit,
+    title,
+    error = null
+}) => {
     return (
         <div className='container-fluid d-flex justify-content-center align-items-center p-0' style={{ height: '100vh' }}>
             <div className='row w-100 h-100 m-0 position-relative'>

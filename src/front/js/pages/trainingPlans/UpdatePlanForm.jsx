@@ -8,11 +8,16 @@ import { formatDate } from '../../helper/formatDate.js';
 import { useLevelOptions } from '../../hooks/useLevelOptions.js';
 import { Badge, Col, Row } from 'react-bootstrap';
 
+
+const NUMBER_OF_SESSIONS = 5
+
 export const UpdatePlanForm = () => {
+    const [errors, setErrors] = useState({});
+    console.log("🚀 ~ UpdatePlanForm ~ errors:", errors)
+
     const { levelOptions } = useLevelOptions();
     const { actions, store } = useContext(Context);
     const { trainingPlansStates, exercisesStates } = store;
-    const navigate = useNavigate();
 
     const [formState, setFormState] = useState({
         name: trainingPlansStates.currentTrainingPlan.name || "",
@@ -22,6 +27,10 @@ export const UpdatePlanForm = () => {
         level: levelOptions.find(option => option.value === trainingPlansStates.currentTrainingPlan.level) || null,
         exercises: []
     });
+
+    const navigate = useNavigate();
+
+
 
     useEffect(() => {
         const associatedExercises = exercisesStates.trainingPlanExercises
@@ -41,8 +50,26 @@ export const UpdatePlanForm = () => {
         value: exe.id
     }));
 
+    const validateForm = () => {
+        const newErrors = {};
+        console.log("🚀 ~ validateForm ~ newErrors:", newErrors)
+        // Validación para cada campo
+        if (!formState.name) newErrors.name = "Please enter a name.";
+        if (!formState.registration_date) newErrors.registration_date = "Please select a registration date.";
+        if (!formState.finalization_date) newErrors.finalization_date = "Please select a finalization date.";
+        if (!formState.quantity_session) newErrors.quantity_session = "Please enter the quantity of sessions.";
+        if (!formState.level) newErrors.level = "Please select a level.";
+        if (!formState.exercises.length) newErrors.exercises = "Please select at least one exercise.";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    }
+
     const onEdit = (e) => {
         e.preventDefault();
+
+        if (!validateForm()) return;
+
         const formData = {
             name: formState.name,
             registration_date: formState.registration_date,
@@ -65,7 +92,22 @@ export const UpdatePlanForm = () => {
     };
 
     const onChange = (key, value) => {
-        if (key === "exercises") {
+        if (key === "quantity_session") {
+            // Validar que la cantidad de sesiones no sea mayor a 5
+            if (value > NUMBER_OF_SESSIONS) {
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    quantity_session: "The number of sessions cannot exceed 5."
+                }));
+            } else {
+                // Remueve el error si la cantidad es válida
+                setErrors(prevErrors => ({
+                    ...prevErrors,
+                    quantity_session: ""
+                }));
+                setFormState(prevState => ({ ...prevState, [key]: value }));
+            }
+        } else if (key === "exercises") {
             const updatedExercises = value.map(exe => {
                 const existingExercise = formState.exercises.find(e => e.value === exe.value);
                 return {
@@ -100,32 +142,79 @@ export const UpdatePlanForm = () => {
         >
             <Row>
                 <Col sm={6}>
-                    <Input label="Name" id="name" value={formState.name} onChange={(e) => onChange("name", e.target.value)} type={"text"} />
+                    <Input
+                        label="Name"
+                        id="name"
+                        value={formState.name}
+                        onChange={(e) => onChange("name", e.target.value)}
+                        type={"text"}
+                        isInvalid={!!errors.name}
+                        errorMessage={errors.name}
+                    />
                 </Col>
                 <Col sm={6}>
                     <div className='mb-3'>
                         <label htmlFor={"level"} className='form-label'>Level</label>
-                        <Select value={formState.level} options={levelOptions} onChange={(data) => onChange("level", data)} />
+                        <Select
+                            isClearable
+                            value={formState.level}
+                            options={levelOptions}
+                            onChange={(data) => onChange("level", data)}
+                            className={errors.level ? 'is-invalid' : ''}
+                        />
+                        {errors.level && <div className="invalid-feedback">{errors.level}</div>}
                     </div>
                 </Col>
             </Row>
             <Row>
                 <Col sm={6}>
-                    <Input label="Registration Date" id="registrationDate" value={formState.registration_date} onChange={(e) => onChange("registration_date", e.target.value)} type={"date"} />
+                    <Input
+                        label="Registration Date"
+                        id="registrationDate"
+                        value={formState.registration_date}
+                        onChange={(e) => onChange("registration_date", e.target.value)}
+                        type={"date"}
+                        isInvalid={!!errors.registration_date}
+                        errorMessage={errors.registration_date}
+                    />
                 </Col>
                 <Col sm={6}>
-                    <Input label="Finalization Date" id="finalizationDate" value={formState.finalization_date} onChange={(e) => onChange("finalization_date", e.target.value)} type={"date"} />
+                    <Input
+                        label="Finalization Date"
+                        id="finalizationDate"
+                        value={formState.finalization_date}
+                        onChange={(e) => onChange("finalization_date", e.target.value)}
+                        type={"date"}
+                        isInvalid={!!errors.finalization_date}
+                        errorMessage={errors.finalization_date}
+                    />
                 </Col>
             </Row>
 
             <Row>
                 <Col sm={6}>
-                    <Input label="Quantity Sessions" id="quantitySession" value={formState.quantity_session} onChange={(e) => onChange("quantity_session", e.target.value)} type={"number"} />
+                    <Input
+                        label="Quantity Sessions"
+                        id="quantitySession"
+                        value={formState.quantity_session}
+                        onChange={(e) => onChange("quantity_session", e.target.value)}
+                        type={"number"}
+                        isInvalid={!!errors.quantity_session}
+                        errorMessage={errors.quantity_session}
+                    />
                 </Col>
                 <Col sm={6}>
                     <div className="mb-3">
                         <label htmlFor={"exercises"} className='form-label'>Exercises</label>
-                        <Select isMulti options={exerciseCollection} onChange={(data) => onChange("exercises", data)} value={formState.exercises} />
+                        <Select
+                            isMulti
+                            isClearable
+                            options={exerciseCollection}
+                            onChange={(data) => onChange("exercises", data)}
+                            value={formState.exercises}
+                            className={errors.exercises ? 'is-invalid' : ''}
+                        />
+                        {errors.exercises && <div className="invalid-feedback">{errors.exercises}</div>}
                     </div>
                 </Col>
             </Row>
