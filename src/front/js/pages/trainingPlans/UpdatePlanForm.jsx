@@ -13,7 +13,6 @@ const NUMBER_OF_SESSIONS = 5
 
 export const UpdatePlanForm = () => {
     const [errors, setErrors] = useState({});
-    console.log("🚀 ~ UpdatePlanForm ~ errors:", errors)
 
     const { levelOptions } = useLevelOptions();
     const { actions, store } = useContext(Context);
@@ -52,11 +51,11 @@ export const UpdatePlanForm = () => {
 
     const validateForm = () => {
         const newErrors = {};
-        console.log("🚀 ~ validateForm ~ newErrors:", newErrors)
-        // Validación para cada campo
         if (!formState.name) newErrors.name = "Please enter a name.";
         if (!formState.registration_date) newErrors.registration_date = "Please select a registration date.";
         if (!formState.finalization_date) newErrors.finalization_date = "Please select a finalization date.";
+        if (formState.finalization_date < formState.registration_date)
+            newErrors.finalization_date = "The finalization date must be greater than or equal to the registration date.";
         if (!formState.quantity_session) newErrors.quantity_session = "Please enter the quantity of sessions.";
         if (!formState.level) newErrors.level = "Please select a level.";
         if (!formState.exercises.length) newErrors.exercises = "Please select at least one exercise.";
@@ -76,7 +75,7 @@ export const UpdatePlanForm = () => {
             finalization_date: formState.finalization_date,
             quantity_session: formState.quantity_session,
             level: formState.level.value,
-            is_active: trainingPlansStates.currentTrainingPlan.is_active,
+            // is_active: trainingPlansStates.currentTrainingPlan.is_active,
             exercises: formState.exercises.map(exe => ({
                 exercise_id: exe.value,
                 repetitions: exe.repetitions,
@@ -92,22 +91,7 @@ export const UpdatePlanForm = () => {
     };
 
     const onChange = (key, value) => {
-        if (key === "quantity_session") {
-            // Validar que la cantidad de sesiones no sea mayor a 5
-            if (value > NUMBER_OF_SESSIONS) {
-                setErrors(prevErrors => ({
-                    ...prevErrors,
-                    quantity_session: "The number of sessions cannot exceed 5."
-                }));
-            } else {
-                // Remueve el error si la cantidad es válida
-                setErrors(prevErrors => ({
-                    ...prevErrors,
-                    quantity_session: ""
-                }));
-                setFormState(prevState => ({ ...prevState, [key]: value }));
-            }
-        } else if (key === "exercises") {
+        if (key === "exercises") {
             const updatedExercises = value.map(exe => {
                 const existingExercise = formState.exercises.find(e => e.value === exe.value);
                 return {

@@ -13,6 +13,7 @@ import { Filters } from "../../component/Filters.jsx";
 import { CustomModal } from "../../component/CustomModal.jsx";
 import { NoRecords } from "../../component/NoRecords.jsx";
 import "./sessions.css"
+import { StatusBadge } from "../../component/StatusBadge.jsx"
 
 export const Sessions = () => {
   const [filter, setFilter] = useState("");
@@ -25,7 +26,6 @@ export const Sessions = () => {
   const { sessions } = sessionsStates
   const { trainingPlanExercises, exercises, sessionExercises } = exercisesStates
 
-  //--> Obtener los planes unicos asociados a las sesiones
   const uniqueTrainingPlans = Array.from(
     new Set(sessions.map(s => s.training_plan_id))
   ).map(id => {
@@ -36,50 +36,89 @@ export const Sessions = () => {
     };
   });
 
-  // Filtrar sesiones segunn el plan de entrenamiento seleccionado
   const filteredSessions = sessionsStates.sessions.filter(s =>
     filter ? s.training_plan_id === filter : true
   );
 
-  //--> Calcular el progreso de una sesión
   const calculateProgress = (sessionId) => {
     const sessionExercises = exercisesStates.sessionExercises.filter(
-      exe => exe.session_id === sessionId
+      (exe) => exe.session_id === sessionId
     );
-    if (sessionExercises.length === 0) return { progress: 0, variant: "danger" };
 
-    const completedExercises = sessionExercises.filter(exe => exe.is_done).length;
-    const progress = Math.round((completedExercises / sessionExercises.length) * 100);
+    // Calcular el total de repeticiones completadas
+    const totalCompletedReps = sessionExercises.reduce((acc, exercise) => {
+      const completedReps = exercise.series_list.reduce(
+        (seriesAcc, series) => seriesAcc + series.repetitions_completed,
+        0
+      );
+      return acc + completedReps;
+    }, 0);
 
+    // Calcular el total de repeticiones requeridas
+    const totalRequiredReps = sessionExercises.reduce((acc, exercise) => {
+      const planExercise = trainingPlanExercises.find(
+        (planEx) => planEx.exercise_id === exercise.exercise_id
+      );
+
+      if (planExercise) {
+        const requiredReps = planExercise.repetitions * planExercise.series;
+        return acc + requiredReps;
+      }
+
+      return acc;
+    }, 0);
+
+    // Calcular el porcentaje de progreso
+    const progress = totalRequiredReps > 0
+      ? Math.round((totalCompletedReps / totalRequiredReps) * 100)
+      : 0;
+
+    // Determinar la variante del color del progreso
     let variant = "danger";
-    if (progress > 75) variant = "success";
+    if (progress > 67) variant = "success";
     else if (progress > 33) variant = "warning";
 
     return { progress, variant };
   };
 
-  const calculateExerciseProgress = (completedSeries, completedRepetitions, totalSeries, totalRepetitions) => {
-    const seriesProgress = (completedSeries / totalSeries) * 100;
-    const repetitionsProgress = (completedRepetitions / totalRepetitions) * 100;
-    const overallProgress = Math.min((seriesProgress + repetitionsProgress) / 2, 100); // promedio para el progreso
+  const calculateExerciseSeriesProgress = (seriesRepetitions = [], totalRepetitionsPerSeries = 1, totalRepetitionsRequired = 1) => {
+    const normalizedRepetitions = Array.from({ length: seriesRepetitions.length }, (_, index) =>
+      seriesRepetitions[index] || 0
+    );
+
+    const totalRepetitionsCompleted = normalizedRepetitions.reduce(
+      (acc, reps) => acc + Math.min(reps, totalRepetitionsPerSeries), // Limitar cada repetición al máximo permitido por serie
+      0
+    );
+
+    const progress = totalRepetitionsRequired > 0
+      ? Math.min(Math.round((totalRepetitionsCompleted / totalRepetitionsRequired) * 100), 100) // Limitar progreso al 100%
+      : 0;
 
     let variant = "danger";
-    if (overallProgress > 75) variant = "success";
-    else if (overallProgress > 33) variant = "warning";
+    if (progress > 67) variant = "success";
+    else if (progress > 33) variant = "warning";
 
-    return { progress: overallProgress, variant };
+    return { progress, variant };
   };
-
 
   const openModal = (session) => {
     setSelectedSession(session);
+
     const prefillUpdates = {};
     sessionExercises.forEach(exercise => {
       if (exercise.session_id === session.id) {
+        const totalSeries = exercise.series || 1;
+        const totalRepetitionsPerSeries = exercise.repetitions || 1;
+
+        const totalRepetitionsRequired = totalSeries * totalRepetitionsPerSeries;
+
+        const seriesRepetitions = exercise.series_list?.map(series => series.repetitions_completed) || Array(totalSeries).fill(0);
+
         prefillUpdates[exercise.id] = {
-          series: exercise.series || 0,
-          repetitions: exercise.repetitions || 0,
-          is_done: exercise.is_done || false
+          seriesRepetitions,
+          totalRepetitionsRequired,
+          totalRepetitionsPerSeries
         };
       }
     });
@@ -94,16 +133,6 @@ export const Sessions = () => {
     setExerciseUpdates({});
   };
 
-  const handleExerciseUpdate = (sessionExerciseId, field, value) => {
-    setExerciseUpdates((prev) => ({
-      ...prev,
-      [sessionExerciseId]: {
-        ...prev[sessionExerciseId],
-        [field]: Number(value),
-      },
-    }));
-  };
-
   const handleSaveChanges = async () => {
     const exercisesToUpdate = Object.entries(exerciseUpdates).map(([sessionExerciseId, updates]) => {
       const sessionExercise = exercisesStates.sessionExercises.find(ex => ex.id === Number(sessionExerciseId));
@@ -115,22 +144,37 @@ export const Sessions = () => {
       if (!sessionExercise || !trainingExercise) return null;
 
       const totalSeries = trainingExercise.series || 1;
-      const totalRepetitions = trainingExercise.repetitions || 1;
-      const is_done = updates.series >= totalSeries && updates.repetitions >= totalRepetitions;
+      // const totalRepetitions = trainingExercise.repetitions || 1;
+
+      const seriesRepetitions = updates.seriesRepetitions || Array(totalSeries).fill(0);
 
       return {
         id: sessionExercise.id,
-        completedSeries: updates.series,
-        completedRepetitions: updates.repetitions,
-        is_done
+        seriesRepetitions,
       };
     }).filter(Boolean);
+
     await actions.updateSessionExercises(exercisesToUpdate);
 
     setExerciseUpdates({});
     closeModal();
   };
 
+  const handleSeriesRepetitionsUpdate = (sessionExerciseId, seriesIndex, value, totalSeries) => {
+    setExerciseUpdates((prev) => {
+      const previousRepetitions = prev[sessionExerciseId]?.seriesRepetitions || Array(totalSeries).fill(0);
+      const updatedRepetitions = [...previousRepetitions];
+      updatedRepetitions[seriesIndex] = Number(value);
+
+      return {
+        ...prev,
+        [sessionExerciseId]: {
+          ...prev[sessionExerciseId],
+          seriesRepetitions: updatedRepetitions,
+        },
+      };
+    });
+  };
 
   if (sessionsStates.isSessionsLoading) {
     return (
@@ -154,8 +198,9 @@ export const Sessions = () => {
         <thead>
           <tr>
             <th scope="col">Session Name</th>
-            <th scope="col">Date</th>
+            <th scope="col">Start Date</th>
             <th scope="col">Training Plan</th>
+            <th scope="col">Plan Status</th>
             <th style={{ minWidth: "185px", maxWidth: "200px" }}>Progress</th>
             <th scope="col">View Progress</th>
           </tr>
@@ -167,13 +212,18 @@ export const Sessions = () => {
               <tr key={index}>
                 <td>{session.name}</td>
                 <td>{formatDate(session.date)}</td>
-                <td>{session.training_plan_name}</td>
+                <td>
+                  {session.training_plan_name}
+                </td>
+                <td>
+                  <StatusBadge status={session.training_plan_status} />
+                </td>
                 <td style={{ position: "relative" }}>
                   <ProgressBar
                     animated
                     now={progress}
                     variant={variant}
-                    style={{ height: "25px" }}
+                    style={{ height: "20px" }}
                   />
                   <span
                     style={{
@@ -183,6 +233,7 @@ export const Sessions = () => {
                       transform: "translate(-50%, -50%)",
                       color: `${variant === "success" ? "#d3c7bb" : "#2c2b33"}`,
                       fontWeight: "600",
+                      fontSize: "13px"
                     }}
                   >
                     {`${progress}%`}
@@ -236,38 +287,42 @@ export const Sessions = () => {
 
                 const sessionExerciseId = sessionExerciseData?.id ?? `temp-${exercise.exercise_id}`;
 
-                const completedSeries = exerciseUpdates[sessionExerciseId]?.series || sessionExerciseData?.series || 0;
-                const completedRepetitions = exerciseUpdates[sessionExerciseId]?.repetitions || sessionExerciseData?.repetitions || 0;
+                // Obtenemos las repeticiones por serie o inicializamos si es la primera vez
                 const totalSeries = exercise.series || 1;
-                const totalRepetitions = exercise.repetitions || 1;
+                // const totalRepetitionsPerSeries = exercise.repetitions || 1;
+                const seriesRepetitions = exerciseUpdates[sessionExerciseId]?.seriesRepetitions || Array(totalSeries).fill(0);
+
+                const { totalRepetitionsRequired, totalRepetitionsPerSeries } = exerciseUpdates[sessionExerciseId] || {};
 
                 // Calcula el progreso y la variante usando la nueva función
-                const { progress, variant } = calculateExerciseProgress(completedSeries, completedRepetitions, totalSeries, totalRepetitions);
+                const { progress, variant } = calculateExerciseSeriesProgress(
+                  seriesRepetitions,
+                  totalRepetitionsPerSeries,
+                  totalRepetitionsRequired
+                );
 
 
                 return (
                   <div key={exercise.id} className="my-2" style={{ padding: "1rem", borderRadius: "8px", border: "1px solid var(--primary)" }}>
                     <span className="d-block mb-1"><strong>{exerciseName}</strong></span>
+
+                    {/* Progreso general del ejercicio */}
                     <ProgressBar animated now={progress} label={`${Math.round(progress)}%`} className="mb-2" style={{ height: "25px" }} variant={variant} />
-                    <div className="d-flex align-items-center mb-2">
-                      <span className="me-2">Series:</span>
-                      <span className="me-3">Total: {totalSeries}</span>
-                      <input
-                        type="number"
-                        placeholder="Completed Series"
-                        value={exerciseUpdates[sessionExerciseId]?.series ?? ""}
-                        className="form-control me-2"
-                        onChange={(e) => handleExerciseUpdate(sessionExerciseId, "series", e.target.value)}
-                      />
-                      <span className="me-2">Repeticiones:</span>
-                      <span className="me-3">Total: {totalRepetitions}</span>
-                      <input
-                        type="number"
-                        placeholder="Completed Repeticiones"
-                        value={exerciseUpdates[sessionExerciseId]?.repetitions ?? ""}
-                        className="form-control me-2"
-                        onChange={(e) => handleExerciseUpdate(sessionExerciseId, "repetitions", e.target.value)}
-                      />
+
+                    <div className="d-flex flex-column mb-2">
+                      {Array.from({ length: totalSeries }, (_, index) => (
+                        <div key={index} className="d-flex align-items-center mb-1">
+                          <span className="me-2">Serie {index + 1}:</span>
+                          <input
+                            type="number"
+                            placeholder={`Reps completadas para Serie ${index + 1}`}
+                            value={seriesRepetitions[index] ?? ""}
+                            className="form-control me-2"
+                            onChange={(e) => handleSeriesRepetitionsUpdate(sessionExerciseId, index, e.target.value, totalSeries)}
+                          />
+                          <span className="me-2">Total: {totalRepetitionsPerSeries}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );

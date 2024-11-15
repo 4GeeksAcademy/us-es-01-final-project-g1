@@ -47,7 +47,7 @@ export const FormLayout = ({
                                 <div className="row">
                                     <div className="col-6">
                                         <button type='button' onClick={goBackOnClick} className='btn btn-secondary w-100'>
-                                            go back!
+                                            Go back!
                                         </button>
                                     </div>
                                     <div className="col-6">

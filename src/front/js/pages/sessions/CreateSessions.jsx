@@ -14,13 +14,23 @@ export const CreateSessions = () => {
   const [errors, setErrors] = useState({})
 
   const { actions, store } = useContext(Context)
-  const userFromLocalStorage = JSON.parse(localStorage.getItem("user"))
-  const _trainingPlans = store?.trainingPlansStates?.trainingPlans?.map((plan) => ({
-    label: plan.name,
-    value: plan.id
-  }))
-
   const navigate = useNavigate()
+
+  const userFromLocalStorage = JSON.parse(localStorage.getItem("user"))
+
+  const _trainingPlans = store?.trainingPlansStates?.trainingPlans
+    ?.filter(plan => plan.current_sessions < plan.quantity_session && plan.status === "active")
+    ?.map(plan => ({
+      label: `${plan.name} (${plan.current_sessions}/${plan.quantity_session})`,
+      value: plan.id,
+      registrationDate: new Date(plan.registration_date),
+      finalizationDate: new Date(plan.finalization_date),
+      currentSessions: plan.current_sessions,
+      quantitySession: plan.quantity_session
+    }));
+
+
+  const hasAvailablePlans = _trainingPlans && _trainingPlans.length > 0
 
   const validate = () => {
     const newErrors = {}
@@ -78,16 +88,21 @@ export const CreateSessions = () => {
         <label htmlFor={"level"} className='form-label'>
           Training Plans
         </label>
-        <Select
+        {hasAvailablePlans ? (<Select
           options={_trainingPlans}
           onChange={(data) => setTrainingPlan(data.value)}
+          className={errors.trainingPlan ? 'is-invalid' : ''}
           styles={{
-            control: (styles,) => ({
+            control: (styles) => ({
               ...styles,
               border: `${errors.trainingPlan && "1px solid red"} `
             })
           }}
-        />
+        />) : (
+          <BannerMessage variant={"warning"} evaluation={true} message={"No hay planes disponibles con cupos. Por favor, cree un nuevo plan de entrenamiento."} />
+        )}
+
+
         {errors.trainingPlan && <div className="invalid-feedback">{errors.trainingPlan}</div>}
       </div>
     </FormLayout >

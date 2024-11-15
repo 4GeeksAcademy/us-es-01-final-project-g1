@@ -1,8 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from sqlalchemy import Column, String
-
+from sqlalchemy import Enum
 db = SQLAlchemy()
+from enum import Enum
+from sqlalchemy import Enum as SqlEnum  # Importa SQLAlchemy Enum
 
 
 class Users(db.Model):
@@ -64,6 +66,13 @@ class Exercises(db.Model):
                 }
     
 
+class TrainingPlanStatus(Enum):
+    ACTIVE = 'active'
+    COMPLETED = 'completed'
+    EXPIRED = 'expired'
+    DELETED = 'deleted'
+
+
 class TrainingPlans(db.Model):
     __tablename__ = 'training_plans'
     id = db.Column(db.Integer, primary_key=True)
@@ -72,23 +81,28 @@ class TrainingPlans(db.Model):
     registration_date = db.Column(db.DateTime(), default=datetime.now, nullable=False)
     finalization_date = db.Column(db.DateTime(), nullable=False)
     quantity_session = db.Column(db.Integer, nullable=False)
-    is_active = db.Column(db.Boolean, unique=False, nullable=False)
+    status = db.Column(
+        SqlEnum('active', 'completed', 'expired', 'deleted', name='plan_status'),
+        nullable=False,
+        default=TrainingPlanStatus.ACTIVE.value
+    )
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     user_to = db.relationship('Users', foreign_keys=[user_id], backref=db.backref('training_plans', lazy='select'))
-    # test
 
     def __repr__(self):
         return f'<TrainingPlan {self.id} - {self.name}>'
 
     def serialize(self):
-        return {'id': self.id,
-                'name': self.name,
-                'level': self.level,
-                'registration_date': self.registration_date,
-                'finalization_date': self.finalization_date,
-                'quantity_session': self.quantity_session,
-                'is_active': self.is_active,
-                'user_id': self.user_id}
+        return {
+            'id': self.id,
+            'name': self.name,
+            'level': self.level,
+            'registration_date': self.registration_date,
+            'finalization_date': self.finalization_date,
+            'quantity_session': self.quantity_session,
+            'status': self.status,
+            'user_id': self.user_id
+        }
 
 
 class TrainingExercises(db.Model):
@@ -141,16 +155,44 @@ class SessionExercises(db.Model):
     exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.id'), nullable=False)
     exercise_to = db.relationship('Exercises', foreign_keys=[exercise_id], backref=db.backref('session_exercises', lazy='select'))
 
+    # Relación con SessionExerciseSeries
+    series_list = db.relationship('SessionExerciseSeries', lazy='dynamic', cascade='all, delete-orphan')
+
     def __repr__(self):
         return f'<SessionExercise {self.id} - session {self.session_id} - exercise {self.exercise_id}>'
 
     def serialize(self):
-        return {'id': self.id,
-                'series': self.series,
-                'repetitions': self.repetitions,
-                'is_done': self.is_done,
-                'session_id': self.session_id,
-                'exercise_id': self.exercise_id}
+        return {
+            'id': self.id,
+            'series': self.series,
+            'repetitions': self.repetitions,
+            'is_done': self.is_done,
+            'session_id': self.session_id,
+            'exercise_id': self.exercise_id,
+            'series_list': [series.serialize() for series in self.series_list]
+        }
+    
+
+class SessionExerciseSeries(db.Model):
+    __tablename__ = 'session_exercise_series'
+    id = db.Column(db.Integer, primary_key=True)
+    session_exercise_id = db.Column(db.Integer, db.ForeignKey('session_exercises.id'), nullable=False)
+    series_number = db.Column(db.Integer, nullable=False) 
+    repetitions_completed = db.Column(db.Integer, nullable=False, default=0)  # Repeticiones completadas en esta serie
+
+    # Relaciones
+    session_exercise = db.relationship(
+        'SessionExercises',
+        foreign_keys=[session_exercise_id]
+    )
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'session_exercise_id': self.session_exercise_id,
+            'series_number': self.series_number,
+            'repetitions_completed': self.repetitions_completed
+        }
 
 
 class MuscleExercises(db.Model):

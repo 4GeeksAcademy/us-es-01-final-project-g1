@@ -7,8 +7,10 @@ from flask_cors import CORS
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import get_jwt_identity
-from api.models import db, Users, TrainingPlans, Exercises, SessionExercises, TrainingExercises, Sessions, MuscleExercises, Categories, Muscles 
+from api.models import db, Users, SessionExerciseSeries, TrainingPlanStatus, TrainingPlans, Exercises, SessionExercises, TrainingExercises, Sessions, MuscleExercises, Categories, Muscles 
 import requests
+from datetime import date
+
 
 
 api = Blueprint('api', __name__)
@@ -75,17 +77,54 @@ def register():
     return jsonify(response_body), 200
 
 
+def calculate_status(plan):
+    today = date.today()
+    plan_finalization_date = plan.finalization_date.date()
+
+    # Respetar el estado actual si es `deleted` o `completed`
+    if plan.status == TrainingPlanStatus.DELETED.value:
+        return TrainingPlanStatus.DELETED.value
+    elif plan.status == TrainingPlanStatus.COMPLETED.value:
+        return TrainingPlanStatus.COMPLETED.value
+    elif plan_finalization_date < today:
+        return TrainingPlanStatus.EXPIRED.value
+    elif plan.registration_date.date() <= today <= plan_finalization_date:
+        return TrainingPlanStatus.ACTIVE.value
+
+    return plan.status
+
+
 @api.route('/training-plans', methods=['GET', 'POST'])
 @jwt_required()
 def training_plans():
     response_body = {}
     current_user = get_jwt_identity()
+
     if request.method == 'GET':
-        rows = db.session.execute(db.select(TrainingPlans).where(TrainingPlans.user_id == current_user['user_id'], TrainingPlans.is_active == True)).scalars()
-        result = [row.serialize() for row in rows]    
+        rows = db.session.execute(
+        db.select(TrainingPlans)
+        .where(
+            TrainingPlans.user_id == current_user['user_id'],
+            TrainingPlans.status != 'deleted'  # Filtrar los planes expirados
+        )
+        ).scalars()
+           
+        result = []
+        for plan in rows:
+            plan.status = calculate_status(plan)
+            
+            current_sessions_count = db.session.query(Sessions).filter_by(training_plan_id=plan.id).count()
+            
+            serialized_plan = plan.serialize()
+
+            serialized_plan['current_sessions'] = current_sessions_count  # Agregar el conteo de sesiones actuales
+
+            result.append(serialized_plan)
+
         response_body['message'] = 'Listado de Planes de Entrenamiento'
         response_body['results'] = result
         return response_body, 200
+    
     if request.method == 'POST':
         data = request.json
         exercise_data = data.get('exercises', []) 
@@ -94,7 +133,7 @@ def training_plans():
                             registration_date=data.get('registration_date'),
                             finalization_date=data.get('finalization_date'),
                             quantity_session=data.get('quantity_session'),
-                            is_active=True,
+                            status='active',
                             user_id=current_user['user_id'])
         db.session.add(row)
         db.session.flush()
@@ -129,17 +168,52 @@ def training_plan(id):
         response_body['results'] = {}
         return response_body, 403
     if request.method == 'GET':
+        current_sessions_count = db.session.query(Sessions).filter_by(training_plan_id=id).count()
+        serialized_plan = row.serialize()
+        serialized_plan['current_sessions'] = current_sessions_count
+
         response_body['message'] = f'Detalle del plan de entrenamiento {id}'
-        response_body['results'] = row.serialize()
+        response_body['results'] = serialized_plan
         return response_body, 200
     if request.method == 'PUT':
         data = request.json
+        new_registration_date = data.get('registration_date')
+        new_finalization_date = data.get('finalization_date')
+
+        # Validación: La fecha de finalización debe ser mayor o igual a la fecha de registro
+        if new_registration_date and new_finalization_date:
+            if new_finalization_date < new_registration_date:
+                response_body['message'] = "La fecha de finalización debe ser mayor o igual a la fecha de registro."
+                return response_body, 400
+
+        current_sessions_count = db.session.query(Sessions).filter_by(training_plan_id=id).count()
+
+        # Validación de `quantity_session`
+        new_quantity_session = data.get('quantity_session')
+        if new_quantity_session is not None:
+            try:
+                # Convertir new_quantity_session a un entero
+                new_quantity_session = int(new_quantity_session)
+            except ValueError:
+                response_body['message'] = "La cantidad de sesiones debe ser un número entero."
+                return response_body, 400
+
+            if new_quantity_session < current_sessions_count:
+                response_body['message'] = (
+                    f"No se puede asignar {new_quantity_session} sesiones ya que el plan tiene {current_sessions_count} sesiones actuales."
+                )
+                return response_body, 400
+
+        # Asignación de valores a las propiedades del plan
         row.name = data.get('name')
         row.level = data.get('level')
-        row.registration_date = data.get('registration_date')
-        row.finalization_date = data.get('finalization_date')
-        row.quantity_session = data.get('quantity_session')
-        row.is_active = data.get('is_active')
+        row.registration_date = new_registration_date
+        row.finalization_date = new_finalization_date
+        row.quantity_session = new_quantity_session if new_quantity_session is not None else row.quantity_session
+
+        # Actualizar el estado solo si está presente en los datos
+        if 'status' in data:
+            row.status = data['status']
 
          # Actualizar los ejercicios asociados
         updated_exercises = data.get('exercises', [])
@@ -182,7 +256,7 @@ def training_plan(id):
         response_body['results'] = row.serialize()
         return response_body, 200
     if request.method == 'DELETE':
-        row.is_active = False
+        row.status = 'deleted' 
         db.session.commit()
         response_body['message'] = f'Plan de entrenamiento {id} eliminado correctamente'
         response_body['results'] = {}
@@ -195,15 +269,36 @@ def sessions():
     response_body = {}
     current_user = get_jwt_identity()
     if request.method == 'GET':
-        rows = db.session.execute(db.select(Sessions).join(TrainingPlans).where(TrainingPlans.user_id == current_user['user_id'])).scalars()
+        rows = db.session.execute(
+            db.select(Sessions)
+            .join(TrainingPlans)
+            .where(
+                TrainingPlans.user_id == current_user['user_id'],
+                TrainingPlans.status != "deleted"
+            )
+        ).scalars()
 
-        result = [row.serialize() for row in rows]    
+        result = []
+        for session in rows:
+            serialized_session = session.serialize()
+            training_plan = session.training_plan_to  # Accede al plan asociado
+
+            # Calcula el estado actual del plan
+            training_plan.status = calculate_status(training_plan)
+
+            # Agrega el estado del plan al objeto serializado de la sesión
+            serialized_session['training_plan_status'] = training_plan.status
+
+            result.append(serialized_session)
+        
         response_body['message'] = 'Listado de Sesiones'
         response_body['results'] = result
         return response_body, 200
+    
     if request.method == 'POST':
         data = request.json
         plan_id = data.get('training_plan_id', None)
+        
         if not plan_id: 
             response_body['message'] = 'Faltan datos en el request (training_plan_id)'
             return response_body, 400
@@ -212,9 +307,29 @@ def sessions():
         if not training_plan:
             response_body['message'] = 'El Plan no existe'
             return response_body, 400
+        
         if training_plan.user_id != current_user['user_id']:
             response_body['message'] = 'Sin Autorizacion'
             return response_body, 401
+        
+        # Validación de fecha: La fecha de la sesión no debe ser posterior a la fecha de finalización del plan
+        session_date_str = data.get('date')
+        if not session_date_str:
+            response_body['message'] = 'Faltan datos en el request (date)'
+            return response_body, 400
+
+        session_date = date.fromisoformat(session_date_str)
+        plan_finalization_date = training_plan.finalization_date.date()
+
+        if session_date > plan_finalization_date:
+            response_body['message'] = f'La sesión no puede ser creada en una fecha posterior a la fecha de finalización del plan ({plan_finalization_date}).'
+            return response_body, 400
+        
+        
+        current_sessions_count = db.session.query(Sessions).filter_by(training_plan_id=plan_id).count()
+        if current_sessions_count >= training_plan.quantity_session:
+            response_body['message'] = 'Se ha alcanzado el número máximo de sesiones para este plan'
+            return response_body, 400
         
         new_session = Sessions(
             date=data.get('date'),
@@ -231,8 +346,8 @@ def sessions():
             session_exercise = SessionExercises(
                 session_id=new_session.id,
                 exercise_id=exercise.exercise_id,
-                repetitions=0,
-                series=0,
+                repetitions=exercise.repetitions,
+                series=exercise.series,
                 is_done=False  # inicializamos como no completado
             )
             db.session.add(session_exercise)
@@ -271,19 +386,40 @@ def exercises():
 @jwt_required()
 def session_exercises():
     response_body = {}
+
     if request.method == 'GET':
         rows = db.session.execute(db.select(SessionExercises)).scalars()
-        result = [row.serialize() for row in rows]
+        result = []
+
+        for session_exercise in rows:
+            # Verificamos si faltan valores en 'series' o 'repetitions'
+            if not session_exercise.series or not session_exercise.repetitions:
+                # Obtenemos el TrainingExercise correspondiente
+                training_exercise = db.session.query(TrainingExercises).filter_by(
+                    exercise_id=session_exercise.exercise_id,
+                    training_plan_id=session_exercise.session_to.training_plan_id  # Suponiendo que tienes una relación `session_to` en `SessionExercises`
+                ).first()
+
+                # Si encontramos un TrainingExercise, actualizamos los valores faltantes en session_exercise
+                if training_exercise:
+                    session_exercise.series = training_exercise.series
+                    session_exercise.repetitions = training_exercise.repetitions
+
+            result.append(session_exercise.serialize())
+
         response_body['message'] = 'Listado de Ejercicios por Sesión'
         response_body['results'] = result
         return response_body, 200
+
     if request.method == 'POST':
         data = request.json
-        row = SessionExercises(session_id=data.get('session_id'),
-                               exercise_id=data.get('exercise_id'),
-                               repetitions=data.get('repetitions'),
-                               series=data.get('series'),
-                               is_done=data.get('is_done'))
+        row = SessionExercises(
+            session_id=data.get('session_id'),
+            exercise_id=data.get('exercise_id'),
+            repetitions=data.get('repetitions'),
+            series=data.get('series'),
+            is_done=data.get('is_done')
+        )
         db.session.add(row)
         db.session.commit()
         response_body['message'] = 'Ejercicio añadido a la sesión exitosamente'
@@ -341,28 +477,68 @@ def muscles():
 
 @api.route('/session-exercises', methods=['PUT'])
 @jwt_required()
-def update_session_exercise():
+def update_session_exercises():
     data = request.json.get("exercises", [])
     
     if not data:
         return {"message": "No se proporcionaron ejercicios para actualizar"}, 400
 
     response_body = {"updated": [], "failed": []}
+    training_plan_id_set = set() 
 
     for exercise_data in data:
-        exercise_id = exercise_data.get("id")
-        session_exercise = db.session.get(SessionExercises, exercise_id)
+        session_exercise_id = exercise_data.get("id")
+        session_exercise = db.session.get(SessionExercises, session_exercise_id)
 
         if not session_exercise:
-            response_body["failed"].append({"id": exercise_id, "message": "El ejercicio no existe"})
+            response_body["failed"].append({"id": session_exercise_id, "message": "El ejercicio no existe"})
             continue
 
-        # Actualizamos los datos del ejercicio
-        session_exercise.series = exercise_data.get("completedSeries", session_exercise.series)
-        session_exercise.repetitions = exercise_data.get("completedRepetitions", session_exercise.repetitions)
-        session_exercise.is_done = exercise_data.get("is_done", session_exercise.is_done)
+        # Actualizamos o creamos los registros de series
+        series_repetitions = exercise_data.get("seriesRepetitions", [])
+        for index, reps_completed in enumerate(series_repetitions):
+            series_number = index + 1
+            series = SessionExerciseSeries.query.filter_by(
+                session_exercise_id=session_exercise_id,
+                series_number=series_number
+            ).first()
+            if series:
+                series.repetitions_completed = reps_completed
+            else:
+                new_series = SessionExerciseSeries(
+                    session_exercise_id=session_exercise_id,
+                    series_number=series_number,
+                    repetitions_completed=reps_completed
+                )
+                db.session.add(new_series)
+
+        # Determinar si el ejercicio está completo
+        total_series = len(series_repetitions)
+        training_exercise = TrainingExercises.query.filter_by(
+            training_plan_id=session_exercise.session_to.training_plan_id,
+            exercise_id=session_exercise.exercise_id
+        ).first()
+
+        total_repetitions = training_exercise.repetitions if training_exercise else 1
+        completed_series_count = sum(1 for reps in series_repetitions if reps >= total_repetitions)
+
+        session_exercise.series = completed_series_count
+        session_exercise.repetitions = sum(series_repetitions)
+        session_exercise.is_done = completed_series_count == total_series
 
         response_body["updated"].append(session_exercise.serialize())
+
+        training_plan_id_set.add(session_exercise.session_to.training_plan_id)
+
+    # Verificar si el plan está completo
+    for plan_id in training_plan_id_set:
+        training_plan = TrainingPlans.query.get(plan_id)
+        all_sessions_complete = all(
+            all(exercise.is_done for exercise in session.exercises)
+            for session in training_plan.sessions
+        )
+        if all_sessions_complete:
+            training_plan.status = 'completed'
 
     db.session.commit()
     return {"message": "Progreso actualizado correctamente", "results": response_body}, 200

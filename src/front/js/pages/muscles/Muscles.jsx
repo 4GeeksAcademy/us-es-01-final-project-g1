@@ -97,6 +97,7 @@ export const Muscles = () => {
                 show={viewMuscles.show}
                 onHide={handleClose}
                 title={viewMuscles.selectedMuscle.name_en}
+                size="lg"
             >
                 <div className="d-flex justify-content-end gap-2" >
                     <OverlayTrigger overlay={<Tooltip id="tt-zoom-out">Zoom Out</Tooltip>}>
@@ -118,7 +119,7 @@ export const Muscles = () => {
                         src={`${process.env.BACKEND_URL}${viewMuscles.selectedMuscle.image_url_main}`}
                         alt={viewMuscles.selectedMuscle.name_en}
                         className={`img-fluid ${isMuscleImageLoaded ? "" : "d-none"}`}
-                        style={{ height: `${zoom}px`, transition: "height 0.3s ease" }}
+                        style={{ height: `${zoom}px`, width: `${zoom}px`, transition: "height 0.3s ease" }}
                         onLoad={() => setIsMuscleImageLoaded(true)}
                     />
                 </div>

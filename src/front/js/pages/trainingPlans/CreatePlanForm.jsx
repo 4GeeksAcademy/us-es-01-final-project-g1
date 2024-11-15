@@ -35,6 +35,8 @@ export const CreatePlanForm = () => {
         if (!formState.name) newErrors.name = "Please enter a name.";
         if (!formState.registration_date) newErrors.registration_date = "Please select a registration date.";
         if (!formState.finalization_date) newErrors.finalization_date = "Please select a finalization date.";
+        if (formState.finalization_date < formState.registration_date)
+            newErrors.finalization_date = "The finalization date must be greater than or equal to the registration date.";
         if (!formState.quantity_session) newErrors.quantity_session = "Please enter the quantity of sessions.";
         if (formState.quantity_session > NUMBER_OF_SESSIONS) newErrors.quantity_session = `The number of sessions cannot exceed ${NUMBER_OF_SESSIONS}.`;
         if (!formState.level) newErrors.level = "Please select a level.";

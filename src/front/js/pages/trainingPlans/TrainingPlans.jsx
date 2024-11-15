@@ -14,6 +14,7 @@ import { NoRecords } from '../../component/NoRecords.jsx';
 import { formatDate } from '../../helper/formatDate.js';
 import { TrainingExercises } from './TrainingExercises.jsx';
 import './trainingPlans.css';
+import { StatusBadge } from '../../component/StatusBadge.jsx';
 
 export const TrainingPlans = () => {
   const [filter, setFilter] = useState("");
@@ -96,11 +97,6 @@ export const TrainingPlans = () => {
           </Button>
         </div>
       </Title>
-      <BannerMessage
-        variant={'info'}
-        message={<Message />}
-        evaluation={true}
-      />
       <Filters options={filterOptions} onFilterChange={setFilter} title={"Filter by Level"} />
       <table className='table table-dark table-striped table-responsive'>
         <thead>
@@ -126,9 +122,7 @@ export const TrainingPlans = () => {
                   <td>{formatDate(trainingPlan?.finalization_date)}</td>
                   <td>{trainingPlan?.quantity_session}</td>
                   <td>
-                    <Badge bg={trainingPlan?.is_active ? "success" : "danger"}>
-                      {trainingPlan?.is_active ? "Active" : "Inactive"}
-                    </Badge>
+                    <StatusBadge status={trainingPlan?.status} />
                   </td>
                   <td>{trainingPlan?.level}</td>
                   <td style={{ position: "relative" }}>

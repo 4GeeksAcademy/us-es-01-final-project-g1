@@ -15,7 +15,7 @@ export const Dashboard = () => {
 
 
   return (
-    <main className='dashboard-container'>
+    <main className='container'>
       <div className='main-overview'>
         <div className='overview-cardIndicator'>
           <CardIndicator value={store?.trainingPlansStates?.trainingPlansCount ?? "0"} description={"Planes de Ejercicio"} section={"planCount"} />
@@ -30,7 +30,7 @@ export const Dashboard = () => {
           <CardIndicator value={"0"} description={"Metas Alcanzadas"} section={"percentageGoal"} />
         </div>
       </div>
-      <div className='container-fluid'>
+      <div className='powerpulse'>
         <div className="row">
           <div className='col-12 col-sm-12 col-md-6 col-lg-6'>
             {store.exercisesStates.isExercisesLoading ? <Loader /> : (

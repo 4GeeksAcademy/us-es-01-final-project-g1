@@ -50,18 +50,17 @@ const fetchData = async ({ endpoint, method = "GET", authToken = true, body = nu
 		const response = await fetch(url, options);
 		const data = await response.json();
 		if (!response.ok) {
-			console.log("🚀 ~ fetchData ~ data:", data)
-			return { error: data.message || "An error occurred", data: null };
+			return { error: data.message || "An error occurred", data: null, errorMesage: data.msg };
 		}
 		return { error: null, data };
 	} catch (error) {
-		console.log("🚀 ~ fetchData ~ error:", error)
 		return { error: "Network error", data: null };
 	}
 };
 
 const validateToken = async () => {
 	const { error } = await fetchData({ endpoint: "validate-token" });
+	console.log("🚀 ~ validateToken ~ error:", error)
 	return !error;
 };
 
@@ -249,9 +248,10 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 				setStore({ ...getStore(), message: data.message, });
 
-				await getActions().getSessions();
+				await getActions().getTrainingPlans();
 				await getActions().getSessionExercises();
-				navigate("/sessions");
+				await getActions().getSessions();
+				await navigate("/sessions");
 
 			},
 			setTrainingPlanExercises: async (formData, navigate,) => {
@@ -399,9 +399,10 @@ const getState = ({ getStore, getActions, setStore }) => {
 					}
 				});
 
-				// Refresca los datos después de actualizar
-				getActions().getSessionExercises(); // Refresca los datos después de actualizar
-				getActions().getSessions(); // Refresca los datos después de actualizar
+
+				getActions().getSessionExercises();
+				getActions().getSessions();
+				getActions().getTrainingPlans();
 			},
 			getInitial: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/initial-setup`
