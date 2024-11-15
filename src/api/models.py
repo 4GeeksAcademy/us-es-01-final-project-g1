@@ -183,7 +183,8 @@ class SessionExerciseSeries(db.Model):
     # Relaciones
     session_exercise = db.relationship(
         'SessionExercises',
-        foreign_keys=[session_exercise_id]
+        foreign_keys=[session_exercise_id],
+        overlaps="series_list"
     )
 
     def serialize(self):

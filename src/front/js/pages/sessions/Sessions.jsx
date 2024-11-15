@@ -45,7 +45,21 @@ export const Sessions = () => {
       (exe) => exe.session_id === sessionId
     );
 
-    // Calcular el total de repeticiones completadas
+    // Calcular el total de repeticiones requeridas usando los valores de trainingPlanExercises
+    const totalRequiredReps = sessionExercises.reduce((acc, exercise) => {
+      const trainingExercise = trainingPlanExercises.find(
+        (planEx) => planEx.exercise_id === exercise.exercise_id
+      );
+
+      if (trainingExercise) {
+        const requiredReps = trainingExercise.repetitions * trainingExercise.series;
+        return acc + requiredReps;
+      }
+
+      return acc;
+    }, 0);
+
+    // Calcular el total de repeticiones completadas usando sessionExercises
     const totalCompletedReps = sessionExercises.reduce((acc, exercise) => {
       const completedReps = exercise.series_list.reduce(
         (seriesAcc, series) => seriesAcc + series.repetitions_completed,
@@ -54,45 +68,40 @@ export const Sessions = () => {
       return acc + completedReps;
     }, 0);
 
-    // Calcular el total de repeticiones requeridas
-    const totalRequiredReps = sessionExercises.reduce((acc, exercise) => {
-      const planExercise = trainingPlanExercises.find(
-        (planEx) => planEx.exercise_id === exercise.exercise_id
-      );
-
-      if (planExercise) {
-        const requiredReps = planExercise.repetitions * planExercise.series;
-        return acc + requiredReps;
-      }
-
-      return acc;
-    }, 0);
-
-    // Calcular el porcentaje de progreso
     const progress = totalRequiredReps > 0
-      ? Math.round((totalCompletedReps / totalRequiredReps) * 100)
+      ? Math.min((totalCompletedReps / totalRequiredReps) * 100, 100)
       : 0;
 
-    // Determinar la variante del color del progreso
     let variant = "danger";
     if (progress > 67) variant = "success";
     else if (progress > 33) variant = "warning";
 
-    return { progress, variant };
+    return { progress: Math.round(progress), variant };
   };
 
-  const calculateExerciseSeriesProgress = (seriesRepetitions = [], totalRepetitionsPerSeries = 1, totalRepetitionsRequired = 1) => {
-    const normalizedRepetitions = Array.from({ length: seriesRepetitions.length }, (_, index) =>
-      seriesRepetitions[index] || 0
-    );
 
-    const totalRepetitionsCompleted = normalizedRepetitions.reduce(
-      (acc, reps) => acc + Math.min(reps, totalRepetitionsPerSeries), // Limitar cada repetición al máximo permitido por serie
+  const calculateExerciseSeriesProgress = (seriesRepetitions = [], exerciseId) => {
+    // Obtener el ejercicio de entrenamiento a partir de exerciseId
+    const trainingExercise = trainingPlanExercises.find(ex => ex.exercise_id === exerciseId);
+
+    if (!trainingExercise) {
+      console.warn(`TrainingExercise no encontrado para exerciseId: ${exerciseId}`);
+      return { progress: 0, variant: "danger" };
+    }
+
+    // Valores de referencia de TrainingExercises
+    const totalSeries = trainingExercise.series || 1;
+    const totalRepetitionsPerSeries = trainingExercise.repetitions || 1;
+    const totalRepetitionsRequired = totalSeries * totalRepetitionsPerSeries;
+
+    // Calcular las repeticiones completadas sin sobrepasar el límite por serie
+    const totalRepetitionsCompleted = seriesRepetitions.reduce(
+      (acc, reps) => acc + Math.min(reps, totalRepetitionsPerSeries),
       0
     );
 
     const progress = totalRepetitionsRequired > 0
-      ? Math.min(Math.round((totalRepetitionsCompleted / totalRepetitionsRequired) * 100), 100) // Limitar progreso al 100%
+      ? Math.min(Math.round((totalRepetitionsCompleted / totalRepetitionsRequired) * 100), 100)
       : 0;
 
     let variant = "danger";
@@ -102,7 +111,12 @@ export const Sessions = () => {
     return { progress, variant };
   };
 
+
+
+
+
   const openModal = (session) => {
+    console.log("🚀 ~ openModal ~ session:", session)
     setSelectedSession(session);
 
     const prefillUpdates = {};
@@ -248,7 +262,7 @@ export const Sessions = () => {
                 </td>
               </tr>
             )
-          }) : <NoRecords />}
+          }) : <NoRecords message="No Sessions to show" />}
         </tbody>
       </table>
 
@@ -289,17 +303,12 @@ export const Sessions = () => {
 
                 // Obtenemos las repeticiones por serie o inicializamos si es la primera vez
                 const totalSeries = exercise.series || 1;
-                // const totalRepetitionsPerSeries = exercise.repetitions || 1;
+                const totalRepetitionsPerSeries = exercise.repetitions || 1;
                 const seriesRepetitions = exerciseUpdates[sessionExerciseId]?.seriesRepetitions || Array(totalSeries).fill(0);
 
-                const { totalRepetitionsRequired, totalRepetitionsPerSeries } = exerciseUpdates[sessionExerciseId] || {};
 
                 // Calcula el progreso y la variante usando la nueva función
-                const { progress, variant } = calculateExerciseSeriesProgress(
-                  seriesRepetitions,
-                  totalRepetitionsPerSeries,
-                  totalRepetitionsRequired
-                );
+                const { progress, variant } = calculateExerciseSeriesProgress(seriesRepetitions, exercise.exercise_id,);
 
 
                 return (

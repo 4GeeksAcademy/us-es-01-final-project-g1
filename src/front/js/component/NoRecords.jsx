@@ -1,7 +1,7 @@
 import React from 'react'
 import { FaExclamationTriangle } from 'react-icons/fa'
 
-export const NoRecords = () => {
+export const NoRecords = ({ message = "No records to show" }) => {
     return (
 
         <tr>
@@ -11,7 +11,7 @@ export const NoRecords = () => {
                         <FaExclamationTriangle />
                     </span>
                     <span className={'noRecords-container-text'}>
-                        No Records to show
+                        {message}
                     </span>
                 </div>
             </td>

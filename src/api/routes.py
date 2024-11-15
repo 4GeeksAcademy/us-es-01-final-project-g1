@@ -12,16 +12,10 @@ import requests
 from datetime import date
 
 
-
 api = Blueprint('api', __name__)
 CORS(api)  # Allow CORS requests to this API
 
 
-@api.route('/hello', methods=['GET'])
-def handle_hello():
-    response_body = {}
-    response_body['message'] = "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"
-    return response_body, 200
 
 @api.route('/validate-token', methods=['GET'])
 @jwt_required()
@@ -393,17 +387,18 @@ def session_exercises():
 
         for session_exercise in rows:
             # Verificamos si faltan valores en 'series' o 'repetitions'
-            if not session_exercise.series or not session_exercise.repetitions:
+            if session_exercise.series is None or session_exercise.repetitions is None:
                 # Obtenemos el TrainingExercise correspondiente
                 training_exercise = db.session.query(TrainingExercises).filter_by(
                     exercise_id=session_exercise.exercise_id,
-                    training_plan_id=session_exercise.session_to.training_plan_id  # Suponiendo que tienes una relación `session_to` en `SessionExercises`
+                    training_plan_id=session_exercise.session_to.training_plan_id
                 ).first()
 
-                # Si encontramos un TrainingExercise, actualizamos los valores faltantes en session_exercise
+                # Si encontramos un TrainingExercise, asignamos los valores si están vacíos en session_exercise
                 if training_exercise:
                     session_exercise.series = training_exercise.series
                     session_exercise.repetitions = training_exercise.repetitions
+                    db.session.commit()  # Solo guardar si realmente actualizamos algo
 
             result.append(session_exercise.serialize())
 
@@ -413,18 +408,26 @@ def session_exercises():
 
     if request.method == 'POST':
         data = request.json
+        training_exercise = db.session.query(TrainingExercises).filter_by(
+            exercise_id=data.get('exercise_id'),
+            training_plan_id=data.get('training_plan_id')
+        ).first()
+
+        # Usar valores de TrainingExercises para series y repeticiones
         row = SessionExercises(
             session_id=data.get('session_id'),
             exercise_id=data.get('exercise_id'),
-            repetitions=data.get('repetitions'),
-            series=data.get('series'),
-            is_done=data.get('is_done')
+            repetitions=training_exercise.repetitions if training_exercise else data.get('repetitions', 1),
+            series=training_exercise.series if training_exercise else data.get('series', 1),
+            is_done=data.get('is_done', False)
         )
+        
         db.session.add(row)
         db.session.commit()
         response_body['message'] = 'Ejercicio añadido a la sesión exitosamente'
         response_body['results'] = row.serialize()
         return response_body, 200
+
 
 
 @api.route('/training-exercises', methods=['GET', 'POST'])
@@ -654,3 +657,8 @@ def initial_setup():
     response_body["message"] = "Setup completo"
     return response_body, 200
 
+@api.route('/hello', methods=['GET'])
+def handle_hello():
+    response_body = {}
+    response_body['message'] = "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"
+    return response_body, 200

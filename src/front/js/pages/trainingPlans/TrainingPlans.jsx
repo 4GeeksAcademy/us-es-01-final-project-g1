@@ -143,7 +143,7 @@ export const TrainingPlans = () => {
                 </tr>
               );
             })
-            : <NoRecords />}
+            : <NoRecords message='No Training Plans to show' />}
         </tbody>
       </table>
     </div>

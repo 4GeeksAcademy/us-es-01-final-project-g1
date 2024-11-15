@@ -122,7 +122,7 @@ export const Exercises = () => {
                 </td>
               </tr>
             )
-          }) : <NoRecords />}
+          }) : <NoRecords message="No Exercises to show" />}
 
         </tbody>
       </table>

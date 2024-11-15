@@ -90,7 +90,7 @@ export const Muscles = () => {
                                 </tr>
                             );
                         })
-                        : <NoRecords />}
+                        : <NoRecords message="No muscles to show" />}
                 </tbody>
             </table>
             <CustomModal

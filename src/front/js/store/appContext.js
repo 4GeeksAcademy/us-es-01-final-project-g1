@@ -31,28 +31,10 @@ const injectContext = PassedComponent => {
 		  store, instead use actions, like this:
 		*/
 		useEffect(() => {
-			// state.actions.getInitial(); //--> esto para popular los datos iniciales
-			state.actions.isLogin();
-		}, []);
-
-		useEffect(() => {
-			// esto controla si en nuestra app perdemos el estado estando logeados o le damos actualizar,
-			if (state.store.isLogin && !state.store.hasFetchedData) {
-				state.actions.getTrainingPlans();
-				state.actions.getSessions();
-				state.actions.getExercises();
-				state.actions.getMuscles();
-				state.actions.getTrainingPlanExercises();
-				state.actions.getSessionExercises();
-				setState({
-					...state,
-					store: {
-						...state.store,
-						hasFetchedData: true
-					}
-				});
+			if (!state.store.hasFetchedData && !state.store.hasCheckedSession) {
+				state.actions.isLogin();
 			}
-		}, [state.store.isLogin]);
+		}, []);
 
 		// The initial value for the context is not null anymore, but the current state of this component,
 		// the context will now have a getStore, getActions and setStore functions available, because they were declared

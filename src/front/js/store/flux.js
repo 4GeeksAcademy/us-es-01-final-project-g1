@@ -5,6 +5,8 @@ const initialState = {
 	errorMessage: null,
 	isLoginLoading: false,
 	hasFetchedData: false,
+	isSessionExpired: false,
+	hasCheckedSession: false,
 	trainingPlansStates: {
 		trainingPlans: [],
 		isTrainingPlansLoading: false,
@@ -38,30 +40,27 @@ const fetchData = async ({ endpoint, method = "GET", authToken = true, body = nu
 		if (token) headers["Authorization"] = `Bearer ${token}`;
 	}
 
-	const url = `${process.env.BACKEND_URL}/api/${endpoint}`
-
-	const options = {
-		method,
-		headers,
-		body: body ? JSON.stringify(body) : null,
-	};
+	const url = `${process.env.BACKEND_URL}/api/${endpoint}`;
 
 	try {
-		const response = await fetch(url, options);
-		const data = await response.json();
-		if (!response.ok) {
-			return { error: data.message || "An error occurred", data: null, errorMesage: data.msg };
+		const response = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null });
+
+		if (response.status === 401) {
+			getActions().logout(); // Limpiar estado y localStorage
+			getActions().setSessionExpired(); // Actualizar el estado para el modal
+			return { error: "Sesión expirada. Por favor, vuelve a iniciar sesión.", data: null };
 		}
+
+		const data = await response.json();
+
+		if (!response.ok) {
+			return { error: data.message || "Ocurrió un error.", data: null };
+		}
+
 		return { error: null, data };
 	} catch (error) {
-		return { error: "Network error", data: null };
+		return { error: "Error de red.", data: null };
 	}
-};
-
-const validateToken = async () => {
-	const { error } = await fetchData({ endpoint: "validate-token" });
-	console.log("🚀 ~ validateToken ~ error:", error)
-	return !error;
 };
 
 
@@ -75,9 +74,25 @@ const getState = ({ getStore, getActions, setStore }) => {
 			resetState: () => {
 				return setStore({ ...initialState })
 			},
+			setSessionExpired: () => {
+				setStore({ isSessionExpired: true });
+			},
+			loadInitialData: async () => {
+				getActions().getTrainingPlanExercises();
+				getActions().getTrainingPlans();
+				getActions().getMuscles();
+				getActions().getSessions();
+				getActions().getExercises();
+				getActions().getSessionExercises();
+				setStore({
+					...getStore(),
+					hasFetchedData: true,
+				});
+			},
 			login: async (formData, navigate) => {
 				setStore({ errorMessage: null, isLoginLoading: true });
 				const { error, data } = await fetchData({ endpoint: "login", method: "POST", authToken: false, body: formData, });
+				console.log("🚀 ~ login: ~ data:", data)
 				if (error) {
 					setStore({ message: error, errorMessage: error, isLoginLoading: false });
 					return;
@@ -87,7 +102,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				setStore({
 					isLogin: true,
 					user: data?.results,
-					message: data.message,
+					message: data?.message,
 					isLoginLoading: false,
 				});
 				navigate("/dashboard");
@@ -100,38 +115,25 @@ const getState = ({ getStore, getActions, setStore }) => {
 					user: {},
 					message: null,
 					errorMessage: null,
-					hasFetchedData: false
+					hasFetchedData: false,
+					isSessionExpired: false,
 				});
 			},
 			isLogin: async () => {
-				const authToken = localStorage.getItem("token")
-				const user = localStorage.getItem("user")
-				if (authToken && user) {
-					const isValidToken = await validateToken();
-					if (isValidToken) {
-						setStore({
-							...getStore(),
-							isLogin: true,
-							user: JSON.parse(user),
-							hasFetchedData: true
-						});
-
-						getActions().getTrainingPlanExercises();
-						getActions().getTrainingPlans();
-						getActions().getMuscles();
-						getActions().getSessions();
-						getActions().getExercises();
-						getActions().getSessionExercises();
-
-					} else {
-						console.warn("Token no válido. Por favor, vuelve a iniciar sesión.");
-						setStore({ isLogin: false, user: {}, message: "Tu sesión ha caducado." });
-					}
-
-				} else {
-					setStore({ isLogin: false, user: {} });
+				const token = localStorage.getItem("token");
+				if (!token) {
+					setStore({ isLogin: false, hasCheckedSession: true });
+					return;
 				}
 
+				const { error } = await fetchData({ endpoint: "validate-token", authToken: true });
+				if (error) {
+					setStore({ isLogin: false, isSessionExpired: true, hasCheckedSession: true });
+					return;
+				}
+
+				setStore({ isLogin: true, hasCheckedSession: true });
+				getActions().loadInitialData();
 			},
 			register: async (formData, navigate) => {
 				setStore({ errorMessage: null, isLoginLoading: true });
@@ -151,6 +153,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 				navigate("/dashboard");
 			},
 			getTrainingPlans: async () => {
+				const { isSessionExpired } = getStore();
+				if (isSessionExpired) return;
 				setStore({ ...getStore(), trainingPlansStates: { ...getStore().trainingPlansStates, isTrainingPlansLoading: true } })
 				const { error, data } = await fetchData({ endpoint: "training-plans", method: "GET" });
 				if (error) {
