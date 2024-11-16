@@ -15,12 +15,12 @@ export const SessionExpiredModal = () => {
                 text: "Tu sesión ha caducado. Por favor, inicia sesión nuevamente.",
                 icon: "warning",
                 confirmButtonText: "Volver a iniciar sesión",
+                confirmButtonColor: '#ff5733',
                 allowOutsideClick: false,
                 allowEscapeKey: false,
             }).then(() => {
-                debugger
-                actions.logout(); // Limpia el estado y localStorages
-                navigate("/"); // Redirige al login
+                actions.logout();
+                navigate("/");
             });
         }
     }, [store.isSessionExpired, actions, navigate]);

@@ -31,8 +31,8 @@ export const Exercises = () => {
   const [isExerciseImageLoaded, setIsExerciseImageLoaded] = useState(false);
 
   const { store } = useContext(Context)
-  const { exercisesStates, } = store
-  const { exercises, isExercisesLoading } = exercisesStates
+  const { exercisesStates, isAppLoading } = store
+  const { exercises } = exercisesStates
 
   const filteredExercises = exercises.filter(exe => filter ? exe.category_name === filter : true);
 
@@ -71,7 +71,7 @@ export const Exercises = () => {
 
 
 
-  if (isExercisesLoading) {
+  if (isAppLoading) {
     return (
       <div className={'container mt-5'}>
         <SkeletonTable />

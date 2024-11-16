@@ -22,8 +22,7 @@ export const Muscles = () => {
     const [isMuscleImageLoaded, setIsMuscleImageLoaded] = useState(false);
 
     const { store } = useContext(Context)
-    const { musclesStates } = store
-    const { muscles } = musclesStates
+    const { muscles, isAppLoading } = store
 
     const filteredMuscles = muscles.filter(muscle =>
         filter === null ? true : muscle.is_front === filter
@@ -51,7 +50,7 @@ export const Muscles = () => {
         if (zoom > 200) setZoom(prevZoom => prevZoom - 100);
     };
 
-    if (store?.musclesStates?.isMusclesLoading) {
+    if (isAppLoading) {
         return (
             <div className={'container mt-5'}>
                 <SkeletonTable />

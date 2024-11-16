@@ -20,9 +20,8 @@ export const TrainingPlans = () => {
   const [filter, setFilter] = useState("");
 
   const { store, actions } = useContext(Context);
-  const { trainingPlansStates, exercisesStates } = store;
+  const { trainingPlansStates, isAppLoading } = store;
   const { trainingPlans, isTrainingPlansLoading, } = trainingPlansStates;
-  const { isExercisesLoading } = exercisesStates
 
   const navigate = useNavigate();
 
@@ -80,7 +79,7 @@ export const TrainingPlans = () => {
 
   const Message = () => <div className='infoMessage'><FaInfo /> You can add your exercises directly from the table or when creating a new training plan.</div>
 
-  if (isTrainingPlansLoading && isExercisesLoading) {
+  if (isAppLoading) {
     return (
       <div className={'container mt-5'}>
         <SkeletonTable />

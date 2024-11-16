@@ -55,8 +55,6 @@ export const CreateSessions = () => {
     actions.createSessions({ formData, navigate })
   }
 
-
-
   return (
     <FormLayout
       isLoading={store.sessionsStates.isSessionsLoading}
@@ -101,7 +99,6 @@ export const CreateSessions = () => {
         />) : (
           <BannerMessage variant={"warning"} evaluation={true} message={"No hay planes disponibles con cupos. Por favor, cree un nuevo plan de entrenamiento."} />
         )}
-
 
         {errors.trainingPlan && <div className="invalid-feedback">{errors.trainingPlan}</div>}
       </div>

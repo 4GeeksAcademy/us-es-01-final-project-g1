@@ -6,12 +6,12 @@ export const ProtectedRoute = ({ children }) => {
     const { store } = useContext(Context);
 
     // Verifica si la sesión ha sido revisada antes de cargar la ruta
-    if (!store.hasCheckedSession) return null;
+    if (!store.hasCheckedSession && store.isSessionExpired) return null;
 
     // Redirige si la sesión está expirada o si no está autenticado
-    if (!store.isLogin || store.isSessionExpired) {
-        return <Navigate to="/" />;
-    }
+    // if (!store.isLogin || store.isSessionExpired) {
+    //     return <Navigate to="/" />;
+    // }
 
     return children;
 }

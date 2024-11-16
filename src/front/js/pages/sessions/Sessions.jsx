@@ -14,6 +14,7 @@ import { CustomModal } from "../../component/CustomModal.jsx";
 import { NoRecords } from "../../component/NoRecords.jsx";
 import "./sessions.css"
 import { StatusBadge } from "../../component/StatusBadge.jsx"
+import { Badge, Col, Row } from "react-bootstrap"
 
 export const Sessions = () => {
   const [filter, setFilter] = useState("");
@@ -22,7 +23,7 @@ export const Sessions = () => {
   const [exerciseUpdates, setExerciseUpdates] = useState({});
 
   const { store, actions } = useContext(Context)
-  const { sessionsStates, exercisesStates } = store
+  const { sessionsStates, exercisesStates, isAppLoading } = store
   const { sessions } = sessionsStates
   const { trainingPlanExercises, exercises, sessionExercises } = exercisesStates
 
@@ -45,7 +46,6 @@ export const Sessions = () => {
       (exe) => exe.session_id === sessionId
     );
 
-    // Calcular el total de repeticiones requeridas usando los valores de trainingPlanExercises
     const totalRequiredReps = sessionExercises.reduce((acc, exercise) => {
       const trainingExercise = trainingPlanExercises.find(
         (planEx) => planEx.exercise_id === exercise.exercise_id
@@ -59,7 +59,6 @@ export const Sessions = () => {
       return acc;
     }, 0);
 
-    // Calcular el total de repeticiones completadas usando sessionExercises
     const totalCompletedReps = sessionExercises.reduce((acc, exercise) => {
       const completedReps = exercise.series_list.reduce(
         (seriesAcc, series) => seriesAcc + series.repetitions_completed,
@@ -81,7 +80,6 @@ export const Sessions = () => {
 
 
   const calculateExerciseSeriesProgress = (seriesRepetitions = [], exerciseId) => {
-    // Obtener el ejercicio de entrenamiento a partir de exerciseId
     const trainingExercise = trainingPlanExercises.find(ex => ex.exercise_id === exerciseId);
 
     if (!trainingExercise) {
@@ -89,12 +87,10 @@ export const Sessions = () => {
       return { progress: 0, variant: "danger" };
     }
 
-    // Valores de referencia de TrainingExercises
     const totalSeries = trainingExercise.series || 1;
     const totalRepetitionsPerSeries = trainingExercise.repetitions || 1;
     const totalRepetitionsRequired = totalSeries * totalRepetitionsPerSeries;
 
-    // Calcular las repeticiones completadas sin sobrepasar el límite por serie
     const totalRepetitionsCompleted = seriesRepetitions.reduce(
       (acc, reps) => acc + Math.min(reps, totalRepetitionsPerSeries),
       0
@@ -112,11 +108,7 @@ export const Sessions = () => {
   };
 
 
-
-
-
   const openModal = (session) => {
-    console.log("🚀 ~ openModal ~ session:", session)
     setSelectedSession(session);
 
     const prefillUpdates = {};
@@ -158,7 +150,6 @@ export const Sessions = () => {
       if (!sessionExercise || !trainingExercise) return null;
 
       const totalSeries = trainingExercise.series || 1;
-      // const totalRepetitions = trainingExercise.repetitions || 1;
 
       const seriesRepetitions = updates.seriesRepetitions || Array(totalSeries).fill(0);
 
@@ -190,7 +181,7 @@ export const Sessions = () => {
     });
   };
 
-  if (sessionsStates.isSessionsLoading) {
+  if (isAppLoading) {
     return (
       <div className={"container mt-5"}>
         <SkeletonTable />
@@ -280,8 +271,7 @@ export const Sessions = () => {
         >
           <div>
             <div className="d-flex align-items-center justify-content-between">
-
-              <h5>Training Plan: {selectedSession.training_plan_name}</h5>
+              <h5>Training Plan: <b>{selectedSession.training_plan_name}</b></h5>
               <h5>Date: {formatDate(selectedSession.date)}</h5>
             </div>
             {trainingPlanExercises
@@ -292,7 +282,6 @@ export const Sessions = () => {
                   (ex) => ex.id === exercise.exercise_id
                 )?.name || `Exercise #${exercise.exercise_id}`;
 
-                // Datos actuales del ejercicio en la sesión
                 const sessionExerciseData = sessionExercises.find(
                   (sessionExe) =>
                     sessionExe.exercise_id === exercise.exercise_id &&
@@ -301,35 +290,44 @@ export const Sessions = () => {
 
                 const sessionExerciseId = sessionExerciseData?.id ?? `temp-${exercise.exercise_id}`;
 
-                // Obtenemos las repeticiones por serie o inicializamos si es la primera vez
                 const totalSeries = exercise.series || 1;
                 const totalRepetitionsPerSeries = exercise.repetitions || 1;
                 const seriesRepetitions = exerciseUpdates[sessionExerciseId]?.seriesRepetitions || Array(totalSeries).fill(0);
 
-
-                // Calcula el progreso y la variante usando la nueva función
                 const { progress, variant } = calculateExerciseSeriesProgress(seriesRepetitions, exercise.exercise_id,);
 
-
                 return (
-                  <div key={exercise.id} className="my-2" style={{ padding: "1rem", borderRadius: "8px", border: "1px solid var(--primary)" }}>
+                  <div key={exercise.id} className="my-2" style={{ padding: "1rem", borderRadius: "8px", border: "1px solid var(--primary)", boxShadow: "0 0 3px 0px var(--primary-light)" }}>
                     <span className="d-block mb-1"><strong>{exerciseName}</strong></span>
-
                     {/* Progreso general del ejercicio */}
                     <ProgressBar animated now={progress} label={`${Math.round(progress)}%`} className="mb-2" style={{ height: "25px" }} variant={variant} />
-
-                    <div className="d-flex flex-column mb-2">
+                    <div className="sessionExexList">
                       {Array.from({ length: totalSeries }, (_, index) => (
-                        <div key={index} className="d-flex align-items-center mb-1">
-                          <span className="me-2">Serie {index + 1}:</span>
-                          <input
-                            type="number"
-                            placeholder={`Reps completadas para Serie ${index + 1}`}
-                            value={seriesRepetitions[index] ?? ""}
-                            className="form-control me-2"
-                            onChange={(e) => handleSeriesRepetitionsUpdate(sessionExerciseId, index, e.target.value, totalSeries)}
-                          />
-                          <span className="me-2">Total: {totalRepetitionsPerSeries}</span>
+                        <div key={index} className="sessionExexList-item">
+                          <div className="sessionExexList-item-wrapper">
+                            <div className="fs-6 fw-bold text-nowrap" style={{ color: "var(--darkness)" }}>
+                              Serie {index + 1}:
+                            </div>
+                            <div >
+                              <label className="fs-6 fw-bold" style={{ color: "var(--darkness)" }}>Repetitions made</label>
+                              <input
+                                type="number"
+                                placeholder={`Repetitions made for Serie #${index + 1}`}
+                                value={seriesRepetitions[index] ?? ""}
+                                className="form-control me-2"
+                                onChange={(e) => handleSeriesRepetitionsUpdate(sessionExerciseId, index, e.target.value, totalSeries)}
+                              />
+                            </div>
+                          </div>
+
+                          <span className="me-2 d-flex gap-2">
+                            <span className="text-nowrap">Total Repetitions:</span>
+                            <div>
+                              <Badge bg={"secondary"}>
+                                {totalRepetitionsPerSeries}
+                              </Badge>
+                            </div>
+                          </span>
                         </div>
                       ))}
                     </div>
