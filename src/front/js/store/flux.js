@@ -46,8 +46,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 
 			if (response.status === 401) {
-				console.log("🚀 ~ fetchData ~ data:", data)
-				console.log("🚀 ~ fetchData ~ response:", response)
 				getActions().logout(); // Limpiar estado y localStorage
 				getActions().setSessionExpired(); // Actualizar el estado para el modal
 				return { error: "Sesión expirada. Por favor, vuelve a iniciar sesión.", data: null };
@@ -144,12 +142,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 					return;
 				}
 
-
 				if (token && user) {
 					const { error, data: validToken } = await fetchData({ endpoint: "validate-token", authToken: true });
-					console.log("🚀 ~ isLogin: ~ error:", error)
-					console.log("🚀 ~ isLogin: ~ validToken:", validToken)
-
 					if (validToken) {
 						setStore({
 							...getStore(),
@@ -171,7 +165,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 			},
 			register: async (formData, navigate) => {
-				setStore({ errorMessage: null, isLoginLoading: true });
+				// setStore({ isAppLoading: true });
 				const { error, data } = await fetchData({ endpoint: "register", method: "POST", authToken: false, body: formData, });
 				if (error) {
 					setStore({ errorMessage: error, message: error, isLoginLoading: false });
@@ -183,8 +177,9 @@ const getState = ({ getStore, getActions, setStore }) => {
 					isLogin: true,
 					user: data.results,
 					message: data.message,
-					isLoginLoading: false,
+					isAppLoading: false,
 				});
+				getActions().loadInitialData()
 				navigate("/dashboard");
 			},
 			getTrainingPlans: async () => {

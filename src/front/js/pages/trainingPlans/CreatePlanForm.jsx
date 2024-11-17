@@ -41,6 +41,9 @@ export const CreatePlanForm = () => {
         if (formState.quantity_session > NUMBER_OF_SESSIONS) newErrors.quantity_session = `The number of sessions cannot exceed ${NUMBER_OF_SESSIONS}.`;
         if (!formState.level) newErrors.level = "Please select a level.";
         if (!formState.exercises.length) newErrors.exercises = "Please select at least one exercise.";
+        console.log("🚀 ~ validateForm ~ formState:", formState)
+
+        console.log("🚀 ~ validateForm ~ newErrors:", newErrors)
 
         formState.exercises.forEach((exe, index) => {
             if (!exe.series) {
@@ -204,11 +207,11 @@ export const CreatePlanForm = () => {
                             options={exerciseCollection}
                             onChange={(data) => onChange("exercises", data)}
                             value={formState.exercises}
-                            className={errors.level ? 'is-invalid' : ''}
+                            className={errors.exercises ? 'is-invalid' : ''}
                             styles={{
                                 control: (styles,) => ({
                                     ...styles,
-                                    border: `${errors.level && "1px solid red"} `
+                                    border: `${errors.exercises && "1px solid red"} `
                                 })
                             }}
                         />

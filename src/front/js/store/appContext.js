@@ -32,10 +32,10 @@ const injectContext = PassedComponent => {
 		*/
 		useEffect(() => {
 			console.log("state adentro del UE del Context", state)
-			if (!state.store.hasFetchedData && !state.store.hasCheckedSession) {
+			if (!state.store.hasFetchedData && true) {
 				state.actions.isLogin();
 			}
-		}, [state.store.hasFetchedData, state.store.hasCheckedSession, state.store.isSessionExpired, state.store.isLogin]);
+		}, [state.store.hasFetchedData, state.store.hasCheckedSession]);
 
 		// The initial value for the context is not null anymore, but the current state of this component,
 		// the context will now have a getStore, getActions and setStore functions available, because they were declared
