@@ -9,9 +9,9 @@ export const ProtectedRoute = ({ children }) => {
     if (!store.hasCheckedSession && store.isSessionExpired) return null;
 
     // Redirige si la sesión está expirada o si no está autenticado
-    if (!store.isLogin || store.isSessionExpired) {
-        return <Navigate to="/" />;
-    }
+    // if (!store.isLogin || store.isSessionExpired) {
+    //     return <Navigate to="/" />;
+    // }
 
     return children;
 }

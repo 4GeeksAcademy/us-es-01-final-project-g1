@@ -9,20 +9,24 @@ import "../../styles/dashboard.css"
 export const Dashboard = () => {
   const { store } = useContext(Context)
 
+  const seriesDone = store.exercisesStates.sessionExercises.filter(se => se.is_done).length
+
+  const tpGoals = store.trainingPlansStates.trainingPlans.filter((tp) => tp.status === "completed").length
+
   return (
     <main className='container'>
       <div className='main-overview'>
         <div className='overview-cardIndicator'>
-          <CardIndicator value={store?.trainingPlansStates?.trainingPlansCount ?? "0"} description={"Planes de Ejercicio"} section={"planCount"} />
+          <CardIndicator value={store?.trainingPlansStates?.trainingPlansCount ?? "0"} description={"Plans Created"} section={"planCount"} />
         </div>
         <div className='overview-cardIndicator'>
-          <CardIndicator value={"0"} description={"Cantidad de Miembros"} section={"membersCount"} />
+          <CardIndicator value={seriesDone} description={"Series Done"} section={"membersCount"} />
         </div>
         <div className='overview-cardIndicator'>
-          <CardIndicator value={"0"} description={"Tiempo aproximado por ejercicio"} section={"timeCount"} />
+          <CardIndicator value={store?.sessionsStates.sessionsCount} description={"Sessions Created"} section={"timeCount"} />
         </div>
         <div className='overview-cardIndicator'>
-          <CardIndicator value={"0"} description={"Metas Alcanzadas"} section={"percentageGoal"} />
+          <CardIndicator value={tpGoals} description={"Gaols Completed"} section={"percentageGoal"} />
         </div>
       </div>
       <div className='powerpulse'>

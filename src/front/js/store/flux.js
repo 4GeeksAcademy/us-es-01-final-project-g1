@@ -13,11 +13,13 @@ const initialState = {
 		trainingPlans: [],
 		isTrainingPlansLoading: false,
 		currentTrainingPlan: {},
+		trainingPlansCount: 0,
 		action: ""
 	},
 	sessionsStates: {
 		isSessionsLoading: false,
 		sessions: [],
+		sessionsCount: 0,
 	},
 	exercisesStates: {
 		exercises: [],
@@ -254,6 +256,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					sessionsStates: {
 						...getStore().sessionsStates,
 						sessions: data.results,
+						sessionsCount: data.results.length
 					}
 				});
 			},

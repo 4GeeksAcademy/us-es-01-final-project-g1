@@ -31,8 +31,7 @@ const injectContext = PassedComponent => {
 		  store, instead use actions, like this:
 		*/
 		useEffect(() => {
-			console.log("state adentro del UE del Context", state)
-			if (!state.store.hasFetchedData && true) {
+			if (!state.store.hasFetchedData && !state.store.hasCheckedSession) {
 				state.actions.isLogin();
 			}
 		}, [state.store.hasFetchedData, state.store.hasCheckedSession]);
