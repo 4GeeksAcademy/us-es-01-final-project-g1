@@ -8,7 +8,7 @@ export const ProtectedRoute = ({ children }) => {
     // Verifica si la sesión ha sido revisada antes de cargar la ruta
     if (!store.hasCheckedSession && store.isSessionExpired) return null;
 
-    // Redirige si la sesión está expirada o si no está autenticado
+    // esto hay que evuluarlo bien, xq cuando refrescamos la pagina esto no lleva al login y es molesto
     // if (!store.isLogin || store.isSessionExpired) {
     //     return <Navigate to="/" />;
     // }
